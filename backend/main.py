@@ -1,3 +1,5 @@
+import os
+import glob
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -257,3 +259,38 @@ async def debug_file(filename: str):
         "checks": results,
         "any_exists": any(r["exists"] for r in results)
     }
+
+
+@app.get("/api/debug/list-all")
+async def list_all_files():
+    """List all files in static/models directory."""
+    try:
+        models_dir = Path(__file__).parent.parent / "static" / "models"
+        files = []
+        if models_dir.exists():
+            for f in models_dir.iterdir():
+                files.append({
+                    "name": f.name,
+                    "size": f.stat().st_size,
+                    "modified": f.stat().st_mtime
+                })
+
+        # Also check /tmp
+        tmp_models = Path("/tmp/static/models") if os.environ.get('RENDER') else None
+        tmp_files = []
+        if tmp_models and tmp_models.exists():
+            for f in tmp_models.iterdir():
+                tmp_files.append({
+                    "name": f.name,
+                    "size": f.stat().st_size
+                })
+
+        return {
+            "static_models_files": files,
+            "tmp_models_files": tmp_files,
+            "static_models_path": str(models_dir),
+            "models_dir_exists": models_dir.exists(),
+            "is_writable": os.access(models_dir, os.W_OK) if models_dir.exists() else False
+        }
+    except Exception as e:
+        return {"error": str(e)}
