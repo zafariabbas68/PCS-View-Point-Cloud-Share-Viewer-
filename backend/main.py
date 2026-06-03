@@ -32,14 +32,7 @@ async def upload_page():
     upload_html_path = Path(__file__).parent.parent / "frontend" / "index.html"
     if upload_html_path.exists():
         return upload_html_path.read_text()
-    return """
-    <html>
-        <body>
-            <h1>PCS-View</h1>
-            <p>Frontend not found.</p>
-        </body>
-    </html>
-    """
+    return "<h1>PCS-View</h1><p>Frontend not found.</p>"
 
 
 @app.get("/viewer/{model_name}", response_class=HTMLResponse)
@@ -140,42 +133,35 @@ async def compute_volume(model_name: str):
 async def export_to_csv(model_name: str):
     """Export point cloud to CSV format."""
     ply_path = MODEL_DIR / model_name
-    logger.info(f"CSV Export requested for: {ply_path}")
+    logger.info(f"CSV Export: {ply_path}")
 
     if not ply_path.exists():
-        logger.error(f"Model not found: {model_name}")
-        raise HTTPException(status_code=404, detail=f"Model not found: {model_name}")
+        logger.error(f"File not found: {model_name}")
+        raise HTTPException(status_code=404, detail=f"Model not found")
 
     try:
         import open3d as o3d
-
-        # Read the PLY file
         pcd = o3d.io.read_point_cloud(str(ply_path))
         points = np.asarray(pcd.points)
 
         logger.info(f"Exporting {len(points)} points to CSV")
 
-        if len(points) == 0:
-            raise HTTPException(status_code=500, detail="No points to export")
-
-        # Create CSV content
+        # Limit to 5000 points for performance
+        max_points = min(len(points), 5000)
         csv_lines = ["X,Y,Z"]
-        for point in points[:10000]:  # Limit to 10,000 for performance
-            csv_lines.append(f"{point[0]:.6f},{point[1]:.6f},{point[2]:.6f}")
+        for i in range(max_points):
+            csv_lines.append(f"{points[i][0]:.6f},{points[i][1]:.6f},{points[i][2]:.6f}")
 
-        csv_content = "\n".join(csv_lines)
+        content = "\n".join(csv_lines)
 
         return Response(
-            content=csv_content,
+            content=content,
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.csv')}",
-                "Access-Control-Allow-Origin": "*"
-            }
+            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.csv')}"}
         )
 
     except Exception as e:
-        logger.error(f"CSV export failed: {str(e)}")
+        logger.error(f"CSV export error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
@@ -183,43 +169,35 @@ async def export_to_csv(model_name: str):
 async def export_to_txt(model_name: str):
     """Export point cloud to TXT format."""
     ply_path = MODEL_DIR / model_name
-    logger.info(f"TXT Export requested for: {ply_path}")
+    logger.info(f"TXT Export: {ply_path}")
 
     if not ply_path.exists():
-        logger.error(f"Model not found: {model_name}")
-        raise HTTPException(status_code=404, detail=f"Model not found: {model_name}")
+        logger.error(f"File not found: {model_name}")
+        raise HTTPException(status_code=404, detail=f"Model not found")
 
     try:
         import open3d as o3d
-
-        # Read the PLY file
         pcd = o3d.io.read_point_cloud(str(ply_path))
         points = np.asarray(pcd.points)
 
         logger.info(f"Exporting {len(points)} points to TXT")
 
-        if len(points) == 0:
-            raise HTTPException(status_code=500, detail="No points to export")
+        # Limit to 5000 points for performance
+        max_points = min(len(points), 5000)
+        txt_lines = [f"# PCS-View Export", f"# Points: {max_points}", "# X Y Z"]
+        for i in range(max_points):
+            txt_lines.append(f"{points[i][0]:.6f} {points[i][1]:.6f} {points[i][2]:.6f}")
 
-        # Create TXT content
-        txt_lines = [f"# PCS-View Exported Point Cloud", f"# Source: {model_name}", f"# Points: {len(points)}",
-                     "# Format: X Y Z"]
-        for point in points[:10000]:  # Limit to 10,000 for performance
-            txt_lines.append(f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f}")
-
-        txt_content = "\n".join(txt_lines)
+        content = "\n".join(txt_lines)
 
         return Response(
-            content=txt_content,
+            content=content,
             media_type="text/plain",
-            headers={
-                "Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.txt')}",
-                "Access-Control-Allow-Origin": "*"
-            }
+            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.txt')}"}
         )
 
     except Exception as e:
-        logger.error(f"TXT export failed: {str(e)}")
+        logger.error(f"TXT export error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 
 
@@ -246,13 +224,9 @@ async def debug_info():
         models_dir = Path(__file__).parent.parent / "static" / "models"
         files = []
         if models_dir.exists():
-            files = [f.name for f in models_dir.iterdir() if f.suffix == '.ply']
-
-        return {
-            "status": "ok",
-            "models_dir_exists": models_dir.exists(),
-            "ply_files": files,
-            "total_files": len(files)
-        }
+            for f in models_dir.iterdir():
+                if f.suffix == '.ply':
+                    files.append({"name": f.name, "size": f.stat().st_size})
+        return {"status": "ok", "ply_files": files, "count": len(files)}
     except Exception as e:
         return {"status": "error", "message": str(e)}
