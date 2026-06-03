@@ -20,7 +20,7 @@ COPY . .
 
 RUN mkdir -p uploads static/models
 
-ENV PORT=10000
+# Render sets PORT environment variable
 EXPOSE 10000
 
-CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-10000}"]

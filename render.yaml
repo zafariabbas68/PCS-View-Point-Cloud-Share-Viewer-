@@ -1,15 +1,13 @@
 services:
   - type: web
     name: pcs-view
-    runtime: python
+    runtime: image
+    repo: https://github.com/zafariabbas68/PCS-View-Point-Cloud-Share-Viewer-
     plan: free
     region: frankfurt
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port 10000
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: RENDER
         value: true
-      - key: PORT
-        value: 10000

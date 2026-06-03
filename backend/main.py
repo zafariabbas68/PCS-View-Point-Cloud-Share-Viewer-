@@ -146,10 +146,9 @@ async def export_to_csv(model_name: str):
 
         logger.info(f"Exporting {len(points)} points to CSV")
 
-        # Limit to 5000 points for performance
-        max_points = min(len(points), 5000)
+        # Export ALL points (no limit for local files)
         csv_lines = ["X,Y,Z"]
-        for i in range(max_points):
+        for i in range(len(points)):
             csv_lines.append(f"{points[i][0]:.6f},{points[i][1]:.6f},{points[i][2]:.6f}")
 
         content = "\n".join(csv_lines)
@@ -182,10 +181,9 @@ async def export_to_txt(model_name: str):
 
         logger.info(f"Exporting {len(points)} points to TXT")
 
-        # Limit to 5000 points for performance
-        max_points = min(len(points), 5000)
-        txt_lines = [f"# PCS-View Export", f"# Points: {max_points}", "# X Y Z"]
-        for i in range(max_points):
+        # Export ALL points with header
+        txt_lines = ["# PCS-View Exported Point Cloud", f"# Points: {len(points)}", "# X Y Z"]
+        for i in range(len(points)):
             txt_lines.append(f"{points[i][0]:.6f} {points[i][1]:.6f} {points[i][2]:.6f}")
 
         content = "\n".join(txt_lines)
