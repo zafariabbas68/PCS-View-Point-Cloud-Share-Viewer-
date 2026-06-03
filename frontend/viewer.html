@@ -274,9 +274,9 @@
         <button id="volume-btn" class="tool-btn">
             <i class="fas fa-cube"></i> Calculate Volume
         </button>
-        <button id="export-dxf-btn" class="tool-btn">
-    <i class="fas fa-file-export"></i> Export to TXT (ASCII)
-</button>
+        <button id="export-csv-btn" class="tool-btn">
+            <i class="fas fa-file-export"></i> Export to CSV (Excel/GIS)
+        </button>
         <button id="center-view-btn" class="tool-btn">
             <i class="fas fa-crosshairs"></i> Center View
         </button>
@@ -357,9 +357,11 @@
         const modelName = window.location.pathname.split('/').pop();
         const plyUrl = `/static/models/${modelName}`;
 
+        console.log('Loading PLY from:', plyUrl);
+
         const loader = new PLYLoader();
         const loadingDiv = document.createElement('div');
-        loadingDiv.textContent = '⏳ Loading point cloud... This may take a moment.';
+        loadingDiv.innerHTML = '⏳ Loading point cloud...<br><small style="font-size:11px;">File: ' + modelName + '</small>';
         loadingDiv.style.position = 'absolute';
         loadingDiv.style.top = '50%';
         loadingDiv.style.left = '50%';
@@ -370,13 +372,27 @@
         loadingDiv.style.borderRadius = '12px';
         loadingDiv.style.zIndex = '100';
         loadingDiv.style.borderLeft = '4px solid #C9A96E';
+        loadingDiv.style.textAlign = 'center';
         container.appendChild(loadingDiv);
 
         let pointCloud = null;
+        let loadingTimeout;
+
+        loadingTimeout = setTimeout(() => {
+            if (loadingDiv && loadingDiv.parentNode) {
+                loadingDiv.innerHTML = '⚠️ Loading is taking longer than expected.<br>The file may be large or the server is waking up.<br>Please wait...';
+            }
+        }, 15000);
 
         loader.load(plyUrl,
             (geometry) => {
-                container.removeChild(loadingDiv);
+                clearTimeout(loadingTimeout);
+                if (loadingDiv && loadingDiv.parentNode) {
+                    container.removeChild(loadingDiv);
+                }
+
+                console.log('PLY loaded successfully! Points:', geometry.attributes.position.count);
+
                 geometry.computeBoundingBox();
                 const center = geometry.boundingBox.getCenter(new THREE.Vector3());
 
@@ -399,16 +415,39 @@
                 controls.update();
 
                 const numPoints = geometry.attributes.position.count;
-                document.getElementById('info').innerHTML = `📡 <strong>PCS-View</strong> | ${numPoints.toLocaleString()} points | Stonex Compatible`;
+                document.getElementById('info').innerHTML = `📡 <strong>PCS-View</strong> | ${numPoints.toLocaleString()} points | Stonex Compatible | ${modelName.substring(0, 12)}...`;
+                document.getElementById('measure-result').innerHTML = '✅ Loaded successfully! Ready to use.';
+                setTimeout(() => {
+                    if (!measureMode) document.getElementById('measure-result').innerHTML = 'Ready';
+                }, 3000);
             },
             (xhr) => {
                 const percent = Math.floor((xhr.loaded / xhr.total) * 100);
-                loadingDiv.textContent = `⏳ Loading point cloud... ${percent}%`;
+                if (loadingDiv) {
+                    loadingDiv.innerHTML = `⏳ Loading point cloud... ${percent}%<br><small>Please wait</small>`;
+                }
+                console.log(`Loading progress: ${percent}%`);
             },
             (error) => {
+                clearTimeout(loadingTimeout);
                 console.error('Error loading PLY:', error);
-                loadingDiv.textContent = '❌ Failed to load point cloud. Please go back and try again.';
-                loadingDiv.style.background = 'rgba(211,32,17,0.9)';
+                if (loadingDiv && loadingDiv.parentNode) {
+                    loadingDiv.innerHTML = '❌ Failed to load point cloud.<br><br>Please go back and try again with a smaller file.';
+                    loadingDiv.style.background = 'rgba(211,32,17,0.95)';
+
+                    const retryBtn = document.createElement('button');
+                    retryBtn.textContent = '← Go Back';
+                    retryBtn.style.marginTop = '15px';
+                    retryBtn.style.padding = '10px 20px';
+                    retryBtn.style.background = '#C9A96E';
+                    retryBtn.style.color = '#1A1A2E';
+                    retryBtn.style.border = 'none';
+                    retryBtn.style.borderRadius = '8px';
+                    retryBtn.style.cursor = 'pointer';
+                    retryBtn.onclick = () => { window.location.href = '/'; };
+                    loadingDiv.appendChild(document.createElement('br'));
+                    loadingDiv.appendChild(retryBtn);
+                }
             }
         );
 
@@ -460,10 +499,12 @@
             }
         });
 
-        document.getElementById('export-dxf-btn')?.addEventListener('click', () => {
+        document.getElementById('export-csv-btn')?.addEventListener('click', () => {
             const measureResult = document.getElementById('measure-result');
-            window.open(`/api/export/${modelName}/txt`, '_blank');
-            measureResult.innerHTML = '📄 Exporting TXT file... Check downloads';
+            const exportUrl = `/api/export/${modelName}/csv`;
+            console.log('Exporting to CSV:', exportUrl);
+            window.open(exportUrl, '_blank');
+            measureResult.innerHTML = '📄 Exporting CSV file... Check downloads folder';
             setTimeout(() => {
                 if (!measureMode) measureResult.innerHTML = 'Ready';
             }, 3000);

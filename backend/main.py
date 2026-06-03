@@ -6,12 +6,16 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
 import shutil
-import os
 from datetime import datetime
 import numpy as np
+import logging
 
 from .config import UPLOAD_DIR, MODEL_DIR, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
 from .converter import convert_point_cloud, calculate_volume, get_point_cloud_info
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="PCS-View API", description="Point Cloud Share Viewer - Stonex Compatible")
 
@@ -112,6 +116,7 @@ async def upload_and_convert(file: UploadFile = File(...)):
         })
 
     except Exception as e:
+        logger.error(f"Upload/conversion error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
 
     finally:
@@ -149,35 +154,108 @@ async def compute_volume(model_name: str):
     return JSONResponse(content=result)
 
 
-@app.get("/api/export/{model_name}/txt")
-async def export_to_txt(model_name: str):
-    """Export point cloud to TXT format (ASCII)."""
+@app.get("/api/export/{model_name}/csv")
+async def export_to_csv(model_name: str):
+    """Export point cloud to CSV format for Excel/GIS software."""
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
+        raise HTTPException(status_code=404, detail=f"Model not found: {model_name}")
+
+    csv_path = MODEL_DIR / f"{model_name.replace('.ply', '.csv')}"
+
+    try:
+        import open3d as o3d
+
+        # Read the PLY file
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        points = np.asarray(pcd.points)
+
+        if len(points) == 0:
+            raise HTTPException(status_code=500, detail="No points to export")
+
+        # Write as CSV file
+        import csv
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['X', 'Y', 'Z'])
+            for point in points:
+                writer.writerow([f"{point[0]:.6f}", f"{point[1]:.6f}", f"{point[2]:.6f}"])
+
+        # Verify file was created
+        if not csv_path.exists():
+            raise HTTPException(status_code=500, detail="Failed to create export file")
+
+        # Return the file
+        return FileResponse(
+            path=csv_path,
+            filename=f"{model_name.replace('.ply', '.csv')}",
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.csv')}"}
+        )
+
+    except Exception as e:
+        logger.error(f"CSV export failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+    finally:
+        # Clean up the temporary csv file after sending
+        if csv_path and csv_path.exists():
+            try:
+                csv_path.unlink()
+            except:
+                pass
+
+
+@app.get("/api/export/{model_name}/txt")
+async def export_to_txt(model_name: str):
+    """Export point cloud to TXT format (ASCII) for CAD integration."""
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(status_code=404, detail=f"Model not found: {model_name}")
 
     txt_path = MODEL_DIR / f"{model_name.replace('.ply', '.txt')}"
 
     try:
         import open3d as o3d
+
+        # Read the PLY file
         pcd = o3d.io.read_point_cloud(str(ply_path))
         points = np.asarray(pcd.points)
+
+        if len(points) == 0:
+            raise HTTPException(status_code=500, detail="No points to export")
 
         # Write as XYZ text file
         with open(txt_path, 'w') as f:
             f.write("# PCS-View Exported Point Cloud\n")
+            f.write(f"# Source: {model_name}\n")
             f.write(f"# Points: {len(points)}\n")
-            f.write("# X Y Z\n")
+            f.write("# Format: X Y Z\n")
             for point in points:
-                f.write(f"{point[0]} {point[1]} {point[2]}\n")
+                f.write(f"{point[0]:.6f} {point[1]:.6f} {point[2]:.6f}\n")
+
+        # Verify file was created
+        if not txt_path.exists():
+            raise HTTPException(status_code=500, detail="Failed to create export file")
 
         return FileResponse(
             path=txt_path,
-            filename=txt_path.name,
-            media_type="text/plain"
+            filename=f"{model_name.replace('.ply', '.txt')}",
+            media_type="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.txt')}"}
         )
+
     except Exception as e:
+        logger.error(f"TXT export failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+
+    finally:
+        # Clean up the temporary txt file after sending
+        if txt_path and txt_path.exists():
+            try:
+                txt_path.unlink()
+            except:
+                pass
 
 
 @app.get("/api/formats")
@@ -208,7 +286,6 @@ async def debug_info():
         if models_dir.exists():
             files = [f.name for f in models_dir.iterdir() if f.suffix == '.ply']
 
-        # Also check if MODEL_DIR from config exists and has files
         config_model_files = []
         if MODEL_DIR.exists():
             config_model_files = [f.name for f in MODEL_DIR.iterdir() if f.suffix == '.ply']
@@ -239,7 +316,6 @@ async def debug_info():
 @app.get("/api/debug/file/{filename}")
 async def debug_file(filename: str):
     """Check if a specific PLY file exists and is accessible."""
-    # Check in both possible locations
     possible_paths = [
         Path(__file__).parent.parent / "static" / "models" / filename,
         MODEL_DIR / filename,
@@ -275,7 +351,6 @@ async def list_all_files():
                     "modified": f.stat().st_mtime
                 })
 
-        # Also check /tmp
         tmp_models = Path("/tmp/static/models") if os.environ.get('RENDER') else None
         tmp_files = []
         if tmp_models and tmp_models.exists():
