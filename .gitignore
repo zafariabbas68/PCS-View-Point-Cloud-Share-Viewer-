@@ -10,14 +10,20 @@ env/
 uploads/
 static/models/*.ply
 static/models/*.las
-static/models/*.laz
+static/models/*.e57
+static/models/*.txt
 
 # IDE
 .idea/
 .vscode/
 *.swp
-*.swo
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Local config
+*.local
+test_cloud.ply
+sample.las
+colorful_cloud.ply
