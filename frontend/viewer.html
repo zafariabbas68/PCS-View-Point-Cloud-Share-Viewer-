@@ -277,6 +277,9 @@
         <button id="export-csv-btn" class="tool-btn">
             <i class="fas fa-file-export"></i> Export to CSV (Excel/GIS)
         </button>
+        <button id="export-txt-btn" class="tool-btn">
+            <i class="fas fa-file-alt"></i> Export to TXT (ASCII)
+        </button>
         <button id="center-view-btn" class="tool-btn">
             <i class="fas fa-crosshairs"></i> Center View
         </button>
@@ -499,12 +502,61 @@
             }
         });
 
-        document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+        // Export CSV - Using fetch and download approach
+        document.getElementById('export-csv-btn')?.addEventListener('click', async () => {
             const measureResult = document.getElementById('measure-result');
-            const exportUrl = `/api/export/${modelName}/csv`;
-            console.log('Exporting to CSV:', exportUrl);
-            window.open(exportUrl, '_blank');
-            measureResult.innerHTML = '📄 Exporting CSV file... Check downloads folder';
+            measureResult.innerHTML = '📄 Preparing CSV export...';
+
+            try {
+                const response = await fetch(`/api/export/${modelName}/csv`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${modelName.replace('.ply', '.csv')}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                measureResult.innerHTML = '✅ CSV export complete! Check downloads folder.';
+            } catch (error) {
+                console.error('Export error:', error);
+                measureResult.innerHTML = '❌ Export failed. Please try again.';
+            }
+
+            setTimeout(() => {
+                if (!measureMode) measureResult.innerHTML = 'Ready';
+            }, 3000);
+        });
+
+        // Export TXT - Using fetch and download approach
+        document.getElementById('export-txt-btn')?.addEventListener('click', async () => {
+            const measureResult = document.getElementById('measure-result');
+            measureResult.innerHTML = '📄 Preparing TXT export...';
+
+            try {
+                const response = await fetch(`/api/export/${modelName}/txt`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${modelName.replace('.ply', '.txt')}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                measureResult.innerHTML = '✅ TXT export complete! Check downloads folder.';
+            } catch (error) {
+                console.error('Export error:', error);
+                measureResult.innerHTML = '❌ Export failed. Please try again.';
+            }
+
             setTimeout(() => {
                 if (!measureMode) measureResult.innerHTML = 'Ready';
             }, 3000);
