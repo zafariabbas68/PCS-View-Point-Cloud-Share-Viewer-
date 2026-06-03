@@ -64,11 +64,8 @@
 - **Export to TXT** - ASCII format for CAD integration
 
 ### 🎨 **User Experience**
-- Afghan-inspired professional design
 - Drag & drop file upload
 - Responsive layout (desktop/tablet)
-- Back to home navigation
-- Persistent footer with author info
 
 ---
 
