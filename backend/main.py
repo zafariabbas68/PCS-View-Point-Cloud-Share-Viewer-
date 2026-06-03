@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
 import shutil
+import os
 from datetime import datetime
 import numpy as np
 
@@ -12,8 +13,12 @@ from .converter import convert_point_cloud, calculate_volume, get_point_cloud_in
 
 app = FastAPI(title="PCS-View API", description="Point Cloud Share Viewer - Stonex Compatible")
 
+# Ensure static directory exists
+static_dir = Path(__file__).parent.parent / "static"
+static_dir.mkdir(parents=True, exist_ok=True)
+
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -90,6 +95,10 @@ async def upload_and_convert(file: UploadFile = File(...)):
         if not conversion_result.get("success"):
             raise HTTPException(status_code=500, detail=conversion_result.get("error", "Conversion failed"))
 
+        # Verify the output file exists and is readable
+        if not output_path.exists() or output_path.stat().st_size == 0:
+            raise HTTPException(status_code=500, detail="Conversion produced empty file")
+
         # Return success response
         viewer_url = f"/viewer/{output_filename}"
         return JSONResponse(content={
@@ -125,7 +134,7 @@ async def get_pointcloud_metadata(model_name: str):
     return JSONResponse(content=result)
 
 
-@app.post("/api/volume/{model_name}")  # Changed to POST
+@app.post("/api/volume/{model_name}")
 async def compute_volume(model_name: str):
     """Calculate volume for stockpile/earthwork applications."""
     ply_path = MODEL_DIR / model_name
@@ -184,3 +193,67 @@ async def get_supported_formats():
 async def health_check():
     """Simple health check endpoint."""
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+
+@app.get("/api/debug")
+async def debug_info():
+    """Debug endpoint to check file availability and paths."""
+    try:
+        static_dir = Path(__file__).parent.parent / "static"
+        models_dir = static_dir / "models"
+
+        files = []
+        if models_dir.exists():
+            files = [f.name for f in models_dir.iterdir() if f.suffix == '.ply']
+
+        # Also check if MODEL_DIR from config exists and has files
+        config_model_files = []
+        if MODEL_DIR.exists():
+            config_model_files = [f.name for f in MODEL_DIR.iterdir() if f.suffix == '.ply']
+
+        return {
+            "status": "ok",
+            "render_env": bool(os.environ.get('RENDER')),
+            "current_working_directory": str(Path.cwd()),
+            "static_dir_exists": static_dir.exists(),
+            "static_dir_path": str(static_dir),
+            "models_dir_exists": models_dir.exists(),
+            "models_dir_path": str(models_dir),
+            "config_model_dir_path": str(MODEL_DIR),
+            "config_model_dir_exists": MODEL_DIR.exists(),
+            "ply_files_in_static_models": files,
+            "ply_files_in_config_models": config_model_files,
+            "all_directories": {
+                "static": str(static_dir),
+                "models": str(models_dir),
+                "config_models": str(MODEL_DIR),
+                "uploads": str(UPLOAD_DIR)
+            }
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/api/debug/file/{filename}")
+async def debug_file(filename: str):
+    """Check if a specific PLY file exists and is accessible."""
+    # Check in both possible locations
+    possible_paths = [
+        Path(__file__).parent.parent / "static" / "models" / filename,
+        MODEL_DIR / filename,
+        Path("/app/static/models") / filename,
+    ]
+
+    results = []
+    for path in possible_paths:
+        results.append({
+            "path": str(path),
+            "exists": path.exists(),
+            "size": path.stat().st_size if path.exists() else None
+        })
+
+    return {
+        "filename": filename,
+        "checks": results,
+        "any_exists": any(r["exists"] for r in results)
+    }
