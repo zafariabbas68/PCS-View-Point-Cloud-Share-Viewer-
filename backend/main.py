@@ -1,6 +1,6 @@
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
@@ -131,7 +131,7 @@ async def compute_volume(model_name: str):
 
 @app.get("/api/export/{model_name}/csv")
 async def export_to_csv(model_name: str):
-    """Export point cloud to CSV format."""
+    """Export point cloud to CSV format - optimized for Render."""
     ply_path = MODEL_DIR / model_name
     logger.info(f"CSV Export: {ply_path}")
 
@@ -146,9 +146,10 @@ async def export_to_csv(model_name: str):
 
         logger.info(f"Exporting {len(points)} points to CSV")
 
-        # Export ALL points (no limit for local files)
+        # Limit to 3000 points for Render free tier memory limits
+        max_points = min(len(points), 3000)
         csv_lines = ["X,Y,Z"]
-        for i in range(len(points)):
+        for i in range(max_points):
             csv_lines.append(f"{points[i][0]:.6f},{points[i][1]:.6f},{points[i][2]:.6f}")
 
         content = "\n".join(csv_lines)
@@ -166,7 +167,7 @@ async def export_to_csv(model_name: str):
 
 @app.get("/api/export/{model_name}/txt")
 async def export_to_txt(model_name: str):
-    """Export point cloud to TXT format."""
+    """Export point cloud to TXT format - optimized for Render."""
     ply_path = MODEL_DIR / model_name
     logger.info(f"TXT Export: {ply_path}")
 
@@ -181,9 +182,10 @@ async def export_to_txt(model_name: str):
 
         logger.info(f"Exporting {len(points)} points to TXT")
 
-        # Export ALL points with header
-        txt_lines = ["# PCS-View Exported Point Cloud", f"# Points: {len(points)}", "# X Y Z"]
-        for i in range(len(points)):
+        # Limit to 3000 points for Render free tier memory limits
+        max_points = min(len(points), 3000)
+        txt_lines = ["# PCS-View Exported Point Cloud", f"# Points: {max_points}", "# X Y Z"]
+        for i in range(max_points):
             txt_lines.append(f"{points[i][0]:.6f} {points[i][1]:.6f} {points[i][2]:.6f}")
 
         content = "\n".join(txt_lines)

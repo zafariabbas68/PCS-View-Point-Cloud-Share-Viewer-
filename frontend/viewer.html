@@ -9,280 +9,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            background: #050b1a;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .viewer-nav {
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #C9A96E;
-            z-index: 100;
-            position: relative;
-        }
-
-        .nav-logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        .nav-logo .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #16213E, #009639);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .nav-logo span {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: white;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; overflow: hidden; background: #050b1a; display: flex; flex-direction: column; height: 100vh; }
+        .viewer-nav { background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #C9A96E; z-index: 100; position: relative; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-logo .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .nav-logo span { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: white; }
         .nav-logo span span { color: #D32011; }
-
-        .home-btn {
-            background: #C9A96E;
-            color: #1A1A2E;
-            padding: 8px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-        }
-        .home-btn:hover {
-            background: white;
-            transform: translateY(-2px);
-        }
-
-        #canvas-container {
-            flex: 1;
-            position: relative;
-        }
-
-        #info {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            pointer-events: none;
-            z-index: 20;
-            font-size: 13px;
-            border-left: 4px solid #C9A96E;
-            font-family: monospace;
-        }
-
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 12px 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            pointer-events: auto;
-            z-index: 20;
-            font-size: 13px;
-            color: white;
-            border-top: 1px solid rgba(255,215,0,0.3);
-        }
-
-        .tools-panel {
-            position: absolute;
-            top: 80px;
-            right: 20px;
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            padding: 15px;
-            width: 260px;
-            z-index: 25;
-            border: 1px solid rgba(201, 169, 110, 0.3);
-            font-size: 12px;
-        }
-
-        .tools-panel h4 {
-            color: #C9A96E;
-            margin-bottom: 12px;
-            font-size: 13px;
-            border-left: 3px solid #C9A96E;
-            padding-left: 8px;
-        }
-
-        .tool-btn {
-            background: rgba(255,255,255,0.15);
-            border: none;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin: 3px 0;
-            width: 100%;
-            text-align: left;
-            font-size: 12px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tool-btn:hover {
-            background: #C9A96E;
-            color: #1A1A2E;
-        }
-
-        .metadata-panel {
-            background: rgba(0,0,0,0.6);
-            border-radius: 8px;
-            padding: 8px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 10px;
-            display: none;
-        }
-
-        .metadata-panel p {
-            margin: 3px 0;
-            color: #88ff88;
-        }
-
-        button {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        button:hover {
-            background: #C9A96E;
-            color: #1A1A2E;
-        }
-
-        .measure-status {
-            background: rgba(201,169,110,0.3);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-        }
-
-        #coord-display {
-            position: absolute;
-            bottom: 90px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 11px;
-            pointer-events: none;
-            z-index: 20;
-            color: #0f0;
-        }
-
-        .instructions {
-            position: absolute;
-            top: 80px;
-            right: 300px;
-            background: rgba(0,0,0,0.6);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 10px;
-            pointer-events: none;
-            z-index: 20;
-            color: #ccc;
-        }
-
-        .viewer-footer {
-            background: rgba(26, 26, 46, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 8px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-            color: rgba(255,255,255,0.6);
-            border-top: 1px solid rgba(201,169,110,0.3);
-            z-index: 100;
-        }
-        .viewer-footer a {
-            color: #C9A96E;
-            text-decoration: none;
-        }
+        .home-btn { background: #C9A96E; color: #1A1A2E; padding: 8px 20px; border-radius: 40px; text-decoration: none; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .home-btn:hover { background: white; transform: translateY(-2px); }
+        #canvas-container { flex: 1; position: relative; }
+        #info { position: absolute; top: 80px; left: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 8px; pointer-events: none; z-index: 20; font-size: 13px; border-left: 4px solid #C9A96E; font-family: monospace; }
+        #controls { position: absolute; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border-radius: 12px; padding: 12px 20px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; pointer-events: auto; z-index: 20; font-size: 13px; color: white; border-top: 1px solid rgba(255,215,0,0.3); }
+        .tools-panel { position: absolute; top: 80px; right: 20px; background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; width: 260px; z-index: 25; border: 1px solid rgba(201, 169, 110, 0.3); font-size: 12px; }
+        .tools-panel h4 { color: #C9A96E; margin-bottom: 12px; font-size: 13px; border-left: 3px solid #C9A96E; padding-left: 8px; }
+        .tool-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin: 3px 0; width: 100%; text-align: left; font-size: 12px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+        .tool-btn:hover { background: #C9A96E; color: #1A1A2E; }
+        .metadata-panel { background: rgba(0,0,0,0.6); border-radius: 8px; padding: 8px; margin-top: 10px; font-family: monospace; font-size: 10px; display: none; }
+        .metadata-panel p { margin: 3px 0; color: #88ff88; }
+        button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; }
+        button:hover { background: #C9A96E; color: #1A1A2E; }
+        .measure-status { background: rgba(201,169,110,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
+        #coord-display { position: absolute; bottom: 90px; right: 20px; background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 11px; pointer-events: none; z-index: 20; color: #0f0; }
+        .instructions { position: absolute; top: 80px; right: 300px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 8px; font-size: 10px; pointer-events: none; z-index: 20; color: #ccc; }
+        .viewer-footer { background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); padding: 8px 30px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.6); border-top: 1px solid rgba(201,169,110,0.3); z-index: 100; }
+        .viewer-footer a { color: #C9A96E; text-decoration: none; }
     </style>
 </head>
 <body>
     <div class="viewer-nav">
-        <a href="/" class="nav-logo">
-            <div class="logo-icon">🌍</div>
-            <span>PCS<span>-View</span></span>
-        </a>
-        <a href="/" class="home-btn">
-            <i class="fas fa-home"></i> Back to Home
-        </a>
+        <a href="/" class="nav-logo"><div class="logo-icon">🌍</div><span>PCS<span>-View</span></span></a>
+        <a href="/" class="home-btn"><i class="fas fa-home"></i> Back to Home</a>
     </div>
-
     <div id="canvas-container"></div>
-
-    <div id="info">
-        📡 <strong>PCS-View</strong> | Stonex Compatible 3D Viewer
-    </div>
-
+    <div id="info">📡 <strong>PCS-View</strong> | Stonex Compatible 3D Viewer</div>
     <div class="tools-panel">
         <h4><i class="fas fa-tools"></i> Professional Tools</h4>
-        <button id="info-btn" class="tool-btn">
-            <i class="fas fa-info-circle"></i> Point Cloud Info
-        </button>
-        <button id="volume-btn" class="tool-btn">
-            <i class="fas fa-cube"></i> Calculate Volume
-        </button>
-        <button id="export-csv-btn" class="tool-btn">
-            <i class="fas fa-file-export"></i> Export to CSV (Excel/GIS)
-        </button>
-        <button id="export-txt-btn" class="tool-btn">
-            <i class="fas fa-file-alt"></i> Export to TXT (ASCII)
-        </button>
-        <button id="center-view-btn" class="tool-btn">
-            <i class="fas fa-crosshairs"></i> Center View
-        </button>
+        <button id="info-btn" class="tool-btn"><i class="fas fa-info-circle"></i> Point Cloud Info</button>
+        <button id="volume-btn" class="tool-btn"><i class="fas fa-cube"></i> Calculate Volume</button>
+        <button id="export-csv-btn" class="tool-btn"><i class="fas fa-file-export"></i> Export to CSV (Excel/GIS)</button>
+        <button id="export-txt-btn" class="tool-btn"><i class="fas fa-file-alt"></i> Export to TXT (ASCII)</button>
+        <button id="center-view-btn" class="tool-btn"><i class="fas fa-crosshairs"></i> Center View</button>
         <div id="metadata-display" class="metadata-panel">
             <p><strong>📊 Point Cloud Info</strong></p>
             <p id="meta-points">Points: --</p>
@@ -290,7 +57,6 @@
             <p id="meta-size">Size: --</p>
         </div>
     </div>
-
     <div id="controls">
         <span>🖱️ Left drag: rotate | Right drag: pan | Scroll: zoom</span>
         <button id="reset-view">Reset Camera</button>
@@ -298,10 +64,7 @@
         <span id="measure-result" class="measure-status">Ready</span>
     </div>
     <div id="coord-display">📍 Hover over the point cloud</div>
-    <div class="instructions">
-        💡 Tip: Click Measure button, then click two points on the model
-    </div>
-
+    <div class="instructions">💡 Tip: Click Measure button, then click two points on the model</div>
     <div class="viewer-footer">
         <div>© 2026 PCS-View | Compatible with Stonex X120GO & Cube-3d</div>
         <div>Ghulam Abbas Zafari | <i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com</div>
@@ -322,46 +85,36 @@
         import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 
         const container = document.getElementById('canvas-container');
-
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050b1a);
         scene.fog = new THREE.FogExp2(0x050b1a, 0.0005);
-
         const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.set(10, 5, 15);
-
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
-
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.rotateSpeed = 1.0;
         controls.zoomSpeed = 1.2;
         controls.panSpeed = 0.8;
-
         const ambientLight = new THREE.AmbientLight(0x404060);
         scene.add(ambientLight);
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
         dirLight.position.set(1, 2, 1);
         scene.add(dirLight);
-
         const gridHelper = new THREE.GridHelper(30, 20, 0x88aaff, 0x335588);
         gridHelper.position.y = -2;
         scene.add(gridHelper);
-
         const axesHelper = new THREE.AxesHelper(5);
         axesHelper.material.transparent = true;
         axesHelper.material.opacity = 0.15;
         scene.add(axesHelper);
-
         const modelName = window.location.pathname.split('/').pop();
         const plyUrl = `/static/models/${modelName}`;
-
         console.log('Loading PLY from:', plyUrl);
-
         const loader = new PLYLoader();
         const loadingDiv = document.createElement('div');
         loadingDiv.innerHTML = '⏳ Loading point cloud...<br><small style="font-size:11px;">File: ' + modelName + '</small>';
@@ -377,58 +130,42 @@
         loadingDiv.style.borderLeft = '4px solid #C9A96E';
         loadingDiv.style.textAlign = 'center';
         container.appendChild(loadingDiv);
-
         let pointCloud = null;
-        let loadingTimeout;
-
-        loadingTimeout = setTimeout(() => {
+        let loadingTimeout = setTimeout(() => {
             if (loadingDiv && loadingDiv.parentNode) {
                 loadingDiv.innerHTML = '⚠️ Loading is taking longer than expected.<br>The file may be large or the server is waking up.<br>Please wait...';
             }
         }, 15000);
-
         loader.load(plyUrl,
             (geometry) => {
                 clearTimeout(loadingTimeout);
-                if (loadingDiv && loadingDiv.parentNode) {
-                    container.removeChild(loadingDiv);
-                }
-
+                if (loadingDiv && loadingDiv.parentNode) container.removeChild(loadingDiv);
                 console.log('PLY loaded successfully! Points:', geometry.attributes.position.count);
-
                 geometry.computeBoundingBox();
                 const center = geometry.boundingBox.getCenter(new THREE.Vector3());
-
                 let material;
                 if (geometry.hasAttribute('color')) {
                     material = new THREE.PointsMaterial({ size: 0.08, vertexColors: true });
                 } else {
                     material = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.08 });
                 }
-
                 pointCloud = new THREE.Points(geometry, material);
                 pointCloud.position.sub(center);
                 scene.add(pointCloud);
-
                 const size = geometry.boundingBox.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
                 const distance = maxDim * 1.5;
                 camera.position.set(distance, distance * 0.6, distance);
                 controls.target.set(0, 0, 0);
                 controls.update();
-
                 const numPoints = geometry.attributes.position.count;
                 document.getElementById('info').innerHTML = `📡 <strong>PCS-View</strong> | ${numPoints.toLocaleString()} points | Stonex Compatible | ${modelName.substring(0, 12)}...`;
                 document.getElementById('measure-result').innerHTML = '✅ Loaded successfully! Ready to use.';
-                setTimeout(() => {
-                    if (!measureMode) document.getElementById('measure-result').innerHTML = 'Ready';
-                }, 3000);
+                setTimeout(() => { if (!measureMode) document.getElementById('measure-result').innerHTML = 'Ready'; }, 3000);
             },
             (xhr) => {
                 const percent = Math.floor((xhr.loaded / xhr.total) * 100);
-                if (loadingDiv) {
-                    loadingDiv.innerHTML = `⏳ Loading point cloud... ${percent}%<br><small>Please wait</small>`;
-                }
+                if (loadingDiv) loadingDiv.innerHTML = `⏳ Loading point cloud... ${percent}%<br><small>Please wait</small>`;
                 console.log(`Loading progress: ${percent}%`);
             },
             (error) => {
@@ -437,7 +174,6 @@
                 if (loadingDiv && loadingDiv.parentNode) {
                     loadingDiv.innerHTML = '❌ Failed to load point cloud.<br><br>Please go back and try again with a smaller file.';
                     loadingDiv.style.background = 'rgba(211,32,17,0.95)';
-
                     const retryBtn = document.createElement('button');
                     retryBtn.textContent = '← Go Back';
                     retryBtn.style.marginTop = '15px';
@@ -454,7 +190,6 @@
             }
         );
 
-        // Professional Tools Functions
         document.getElementById('info-btn')?.addEventListener('click', async () => {
             const metaPanel = document.getElementById('metadata-display');
             const measureResult = document.getElementById('measure-result');
@@ -462,56 +197,33 @@
                 measureResult.innerHTML = '📊 Loading metadata...';
                 const response = await fetch(`/api/info/${modelName}`);
                 const data = await response.json();
-
                 document.getElementById('meta-points').innerHTML = `Points: ${data.point_count?.toLocaleString() || 'N/A'}`;
-                if (data.bounds) {
-                    document.getElementById('meta-bounds').innerHTML = `X: ${data.bounds.min[0]?.toFixed(1) || '0'} to ${data.bounds.max[0]?.toFixed(1) || '0'}`;
-                }
+                if (data.bounds) document.getElementById('meta-bounds').innerHTML = `X: ${data.bounds.min[0]?.toFixed(1) || '0'} to ${data.bounds.max[0]?.toFixed(1) || '0'}`;
                 document.getElementById('meta-size').innerHTML = `Size: ${data.file_size_mb || '?'} MB`;
                 metaPanel.style.display = 'block';
                 measureResult.innerHTML = '✅ Metadata loaded';
-                setTimeout(() => {
-                    metaPanel.style.display = 'none';
-                    if (!measureMode) measureResult.innerHTML = 'Ready';
-                }, 8000);
-            } catch (e) {
-                console.error('Failed to load metadata:', e);
-                measureResult.innerHTML = '❌ Failed to load metadata';
-            }
+                setTimeout(() => { metaPanel.style.display = 'none'; if (!measureMode) measureResult.innerHTML = 'Ready'; }, 8000);
+            } catch (e) { console.error('Failed to load metadata:', e); measureResult.innerHTML = '❌ Failed to load metadata'; }
         });
 
         document.getElementById('volume-btn')?.addEventListener('click', async () => {
             const measureResult = document.getElementById('measure-result');
             measureResult.innerHTML = '📐 Calculating volume...';
             try {
-                const response = await fetch(`/api/volume/${modelName}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const response = await fetch(`/api/volume/${modelName}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
                 const data = await response.json();
-                if (data.success) {
-                    measureResult.innerHTML = `📐 Volume: ${data.volume_cubic_meters} m³ | Area: ${data.surface_area_sq_meters} m²`;
-                } else if (data.error) {
-                    measureResult.innerHTML = `❌ ${data.error}`;
-                } else {
-                    measureResult.innerHTML = `❌ Volume calculation failed`;
-                }
-            } catch (e) {
-                console.error('Volume error:', e);
-                measureResult.innerHTML = `❌ Error: ${e.message}`;
-            }
+                if (data.success) measureResult.innerHTML = `📐 Volume: ${data.volume_cubic_meters} m³ | Area: ${data.surface_area_sq_meters} m²`;
+                else if (data.error) measureResult.innerHTML = `❌ ${data.error}`;
+                else measureResult.innerHTML = `❌ Volume calculation failed`;
+            } catch (e) { console.error('Volume error:', e); measureResult.innerHTML = `❌ Error: ${e.message}`; }
         });
 
-        // Export CSV - Using fetch and download approach
         document.getElementById('export-csv-btn')?.addEventListener('click', async () => {
             const measureResult = document.getElementById('measure-result');
             measureResult.innerHTML = '📄 Preparing CSV export...';
-
             try {
                 const response = await fetch(`/api/export/${modelName}/csv`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -522,26 +234,16 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 measureResult.innerHTML = '✅ CSV export complete! Check downloads folder.';
-            } catch (error) {
-                console.error('Export error:', error);
-                measureResult.innerHTML = '❌ Export failed. Please try again.';
-            }
-
-            setTimeout(() => {
-                if (!measureMode) measureResult.innerHTML = 'Ready';
-            }, 3000);
+            } catch (error) { console.error('Export error:', error); measureResult.innerHTML = '❌ Export failed. Please try again.'; }
+            setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 3000);
         });
 
-        // Export TXT - Using fetch and download approach
         document.getElementById('export-txt-btn')?.addEventListener('click', async () => {
             const measureResult = document.getElementById('measure-result');
             measureResult.innerHTML = '📄 Preparing TXT export...';
-
             try {
                 const response = await fetch(`/api/export/${modelName}/txt`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -552,14 +254,8 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
                 measureResult.innerHTML = '✅ TXT export complete! Check downloads folder.';
-            } catch (error) {
-                console.error('Export error:', error);
-                measureResult.innerHTML = '❌ Export failed. Please try again.';
-            }
-
-            setTimeout(() => {
-                if (!measureMode) measureResult.innerHTML = 'Ready';
-            }, 3000);
+            } catch (error) { console.error('Export error:', error); measureResult.innerHTML = '❌ Export failed. Please try again.'; }
+            setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 3000);
         });
 
         document.getElementById('center-view-btn')?.addEventListener('click', () => {
@@ -569,69 +265,43 @@
                 controls.update();
                 const measureResult = document.getElementById('measure-result');
                 measureResult.innerHTML = '🎯 View centered';
-                setTimeout(() => {
-                    if (!measureMode) measureResult.innerHTML = 'Ready';
-                }, 2000);
+                setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 2000);
             }
         });
 
-        // Measure Distance Tool
         let measureMode = false;
         let pointsClicked = [];
         let lineObject = null;
         let spheres = [];
-
         const measureBtn = document.getElementById('measure-btn');
         const measureResult = document.getElementById('measure-result');
-
         measureBtn.addEventListener('click', () => {
             measureMode = !measureMode;
-            if (measureMode) {
-                measureBtn.style.background = '#ff3300';
-                measureResult.textContent = '🔴 Measure mode ON: Click two points';
-                clearMeasurement();
-            } else {
-                measureBtn.style.background = '#D32011';
-                measureResult.textContent = 'Ready';
-                clearMeasurement();
-            }
+            if (measureMode) { measureBtn.style.background = '#ff3300'; measureResult.textContent = '🔴 Measure mode ON: Click two points'; clearMeasurement(); }
+            else { measureBtn.style.background = '#D32011'; measureResult.textContent = 'Ready'; clearMeasurement(); }
         });
-
-        function clearMeasurement() {
-            if (lineObject) scene.remove(lineObject);
-            spheres.forEach(s => scene.remove(s));
-            spheres = [];
-            pointsClicked = [];
-        }
-
+        function clearMeasurement() { if (lineObject) scene.remove(lineObject); spheres.forEach(s => scene.remove(s)); spheres = []; pointsClicked = []; }
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-
         renderer.domElement.addEventListener('click', (event) => {
             if (!measureMode || !pointCloud) return;
-
             const rect = renderer.domElement.getBoundingClientRect();
             mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObject(pointCloud);
-
             if (intersects.length > 0) {
                 const point = intersects[0].point;
                 pointsClicked.push(point.clone());
-
                 const sphereGeo = new THREE.SphereGeometry(0.08, 16, 16);
                 const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0x442200 });
                 const sphere = new THREE.Mesh(sphereGeo, sphereMat);
                 sphere.position.copy(point);
                 scene.add(sphere);
                 spheres.push(sphere);
-
                 if (pointsClicked.length === 2) {
                     const distance = pointsClicked[0].distanceTo(pointsClicked[1]);
                     measureResult.innerHTML = `📏 Distance: ${distance.toFixed(3)} units | Click Measure button to start over`;
-
                     const pointsArray = [pointsClicked[0], pointsClicked[1]];
                     const lineGeometry = new THREE.BufferGeometry().setFromPoints(pointsArray);
                     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffaa00 });
@@ -639,12 +309,9 @@
                     lineObject = new THREE.Line(lineGeometry, lineMaterial);
                     scene.add(lineObject);
                     pointsClicked = [];
-                } else if (pointsClicked.length === 1) {
-                    measureResult.textContent = '📍 First point selected. Click second point.';
-                }
+                } else if (pointsClicked.length === 1) { measureResult.textContent = '📍 First point selected. Click second point.'; }
             }
         });
-
         const coordDisplay = document.getElementById('coord-display');
         renderer.domElement.addEventListener('mousemove', (event) => {
             if (!pointCloud) return;
@@ -653,38 +320,14 @@
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObject(pointCloud);
-            if (intersects.length > 0) {
-                const pt = intersects[0].point;
-                coordDisplay.innerHTML = `📍 (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)})`;
-            } else {
-                coordDisplay.innerHTML = `📍 Hover over the point cloud`;
-            }
+            if (intersects.length > 0) { const pt = intersects[0].point; coordDisplay.innerHTML = `📍 (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)})`; }
+            else { coordDisplay.innerHTML = `📍 Hover over the point cloud`; }
         });
-
-        document.getElementById('reset-view').addEventListener('click', () => {
-            if (pointCloud) {
-                camera.position.set(10, 6, 12);
-                controls.target.set(0, 0, 0);
-                controls.update();
-            }
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
-        }
+        document.getElementById('reset-view').addEventListener('click', () => { if (pointCloud) { camera.position.set(10, 6, 12); controls.target.set(0, 0, 0); controls.update(); } });
+        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
         animate();
-
         window.addEventListener('resize', onWindowResize);
-        function onWindowResize() {
-            const width = container.clientWidth;
-            const height = container.clientHeight;
-            camera.aspect = width / height;
-            camera.updateProjectionMatrix();
-            renderer.setSize(width, height);
-        }
-
+        function onWindowResize() { const width = container.clientWidth; const height = container.clientHeight; camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); }
         setTimeout(() => onWindowResize(), 100);
     </script>
 </body>
