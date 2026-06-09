@@ -6,7 +6,7 @@
     <title>PCS-View | 3D Point Cloud Viewer - Stonex Compatible</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -21,19 +21,24 @@
         #canvas-container { flex: 1; position: relative; }
         #info { position: absolute; top: 80px; left: 20px; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 8px; pointer-events: none; z-index: 20; font-size: 13px; border-left: 4px solid #C9A96E; font-family: monospace; }
         #controls { position: absolute; bottom: 20px; left: 20px; right: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); border-radius: 12px; padding: 12px 20px; display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; pointer-events: auto; z-index: 20; font-size: 13px; color: white; border-top: 1px solid rgba(255,215,0,0.3); }
-        .tools-panel { position: absolute; top: 80px; right: 20px; background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; width: 260px; z-index: 25; border: 1px solid rgba(201, 169, 110, 0.3); font-size: 12px; }
+        .tools-panel { position: absolute; top: 80px; right: 20px; background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); border-radius: 12px; padding: 15px; width: 280px; z-index: 25; border: 1px solid rgba(201, 169, 110, 0.3); font-size: 12px; max-height: 80vh; overflow-y: auto; }
         .tools-panel h4 { color: #C9A96E; margin-bottom: 12px; font-size: 13px; border-left: 3px solid #C9A96E; padding-left: 8px; }
         .tool-btn { background: rgba(255,255,255,0.15); border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin: 3px 0; width: 100%; text-align: left; font-size: 12px; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
         .tool-btn:hover { background: #C9A96E; color: #1A1A2E; }
+        .section-divider { margin: 10px 0 5px; font-size: 11px; color: #C9A96E; text-transform: uppercase; letter-spacing: 1px; }
         .metadata-panel { background: rgba(0,0,0,0.6); border-radius: 8px; padding: 8px; margin-top: 10px; font-family: monospace; font-size: 10px; display: none; }
         .metadata-panel p { margin: 3px 0; color: #88ff88; }
         button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; }
         button:hover { background: #C9A96E; color: #1A1A2E; }
         .measure-status { background: rgba(201,169,110,0.3); padding: 4px 12px; border-radius: 20px; font-size: 12px; }
         #coord-display { position: absolute; bottom: 90px; right: 20px; background: rgba(0,0,0,0.7); padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 11px; pointer-events: none; z-index: 20; color: #0f0; }
-        .instructions { position: absolute; top: 80px; right: 300px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 8px; font-size: 10px; pointer-events: none; z-index: 20; color: #ccc; }
+        .instructions { position: absolute; top: 80px; right: 310px; background: rgba(0,0,0,0.6); padding: 6px 12px; border-radius: 8px; font-size: 10px; pointer-events: none; z-index: 20; color: #ccc; }
         .viewer-footer { background: rgba(26, 26, 46, 0.95); backdrop-filter: blur(10px); padding: 8px 30px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.6); border-top: 1px solid rgba(201,169,110,0.3); z-index: 100; }
         .viewer-footer a { color: #C9A96E; text-decoration: none; }
+        .status-message { font-size: 11px; margin-top: 8px; padding: 6px; border-radius: 4px; text-align: center; }
+        .status-success { background: rgba(68,255,68,0.2); color: #88ff88; }
+        .status-error { background: rgba(255,68,68,0.2); color: #ff8888; }
+        .status-info { background: rgba(68,68,255,0.2); color: #8888ff; }
     </style>
 </head>
 <body>
@@ -42,41 +47,55 @@
         <a href="/" class="home-btn"><i class="fas fa-home"></i> Back to Home</a>
     </div>
     <div id="canvas-container"></div>
-    <div id="info">📡 <strong>PCS-View</strong> | Stonex Compatible 3D Viewer</div>
+    <div id="info">📡 <strong>PCS-View</strong> | Professional 3D Viewer</div>
+    
     <div class="tools-panel">
-        <h4><i class="fas fa-tools"></i> Professional Tools</h4>
+        <h4><i class="fas fa-cube"></i> 3D Point Cloud Tools</h4>
         <button id="info-btn" class="tool-btn"><i class="fas fa-info-circle"></i> Point Cloud Info</button>
+        <button id="reset-view" class="tool-btn"><i class="fas fa-sync-alt"></i> Reset Camera</button>
+        <button id="center-view-btn" class="tool-btn"><i class="fas fa-crosshairs"></i> Center View</button>
+        
+        <div class="section-divider"><i class="fas fa-chart-line"></i> Analysis Tools</div>
         <button id="volume-btn" class="tool-btn"><i class="fas fa-cube"></i> Calculate Volume</button>
+        <button id="advanced-volume-btn" class="tool-btn"><i class="fas fa-chart-bar"></i> Advanced Volume</button>
+        <button id="cutfill-btn" class="tool-btn"><i class="fas fa-chart-line"></i> Cut & Fill Analysis</button>
+        
+        <div class="section-divider"><i class="fas fa-tag"></i> Classification</div>
+        <button id="classify-height-btn" class="tool-btn"><i class="fas fa-chart-simple"></i> Classify by Height</button>
+        <button id="classify-ground-btn" class="tool-btn"><i class="fas fa-mountain"></i> Ground Classification</button>
+        
+        <div class="section-divider"><i class="fas fa-map"></i> Orthophoto & Contours</div>
+        <button id="orthophoto-btn" class="tool-btn"><i class="fas fa-image"></i> Generate Orthophoto</button>
+        <button id="contours-btn" class="tool-btn"><i class="fas fa-chart-line"></i> Generate Contours</button>
+        
+        <div class="section-divider"><i class="fas fa-download"></i> Export</div>
         <button id="export-csv-btn" class="tool-btn"><i class="fas fa-file-export"></i> Export to CSV (Excel/GIS)</button>
         <button id="export-txt-btn" class="tool-btn"><i class="fas fa-file-alt"></i> Export to TXT (ASCII)</button>
-        <button id="center-view-btn" class="tool-btn"><i class="fas fa-crosshairs"></i> Center View</button>
+        
         <div id="metadata-display" class="metadata-panel">
             <p><strong>📊 Point Cloud Info</strong></p>
             <p id="meta-points">Points: --</p>
             <p id="meta-bounds">Bounds: --</p>
             <p id="meta-size">Size: --</p>
         </div>
+        <div id="status-message" class="status-message" style="display: none;"></div>
     </div>
+
     <div id="controls">
         <span>🖱️ Left drag: rotate | Right drag: pan | Scroll: zoom</span>
-        <button id="reset-view">Reset Camera</button>
         <button id="measure-btn" style="background: #D32011;">📏 Measure Distance</button>
         <span id="measure-result" class="measure-status">Ready</span>
     </div>
     <div id="coord-display">📍 Hover over the point cloud</div>
     <div class="instructions">💡 Tip: Click Measure button, then click two points on the model</div>
+    
     <div class="viewer-footer">
         <div>© 2026 PCS-View | Compatible with Stonex X120GO & Cube-3d</div>
         <div>Ghulam Abbas Zafari | <i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com</div>
     </div>
 
     <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
-            }
-        }
+        { "imports": { "three": "https://unpkg.com/three@0.128.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/" } }
     </script>
 
     <script type="module">
@@ -112,12 +131,14 @@
         axesHelper.material.transparent = true;
         axesHelper.material.opacity = 0.15;
         scene.add(axesHelper);
+        
         const modelName = window.location.pathname.split('/').pop();
         const plyUrl = `/static/models/${modelName}`;
         console.log('Loading PLY from:', plyUrl);
+        
         const loader = new PLYLoader();
         const loadingDiv = document.createElement('div');
-        loadingDiv.innerHTML = '⏳ Loading point cloud...<br><small style="font-size:11px;">File: ' + modelName + '</small>';
+        loadingDiv.innerHTML = '⏳ Loading point cloud...<br><small>' + modelName + '</small>';
         loadingDiv.style.position = 'absolute';
         loadingDiv.style.top = '50%';
         loadingDiv.style.left = '50%';
@@ -130,49 +151,47 @@
         loadingDiv.style.borderLeft = '4px solid #C9A96E';
         loadingDiv.style.textAlign = 'center';
         container.appendChild(loadingDiv);
+        
         let pointCloud = null;
         let loadingTimeout = setTimeout(() => {
-            if (loadingDiv && loadingDiv.parentNode) {
-                loadingDiv.innerHTML = '⚠️ Loading is taking longer than expected.<br>The file may be large or the server is waking up.<br>Please wait...';
-            }
+            if (loadingDiv && loadingDiv.parentNode) loadingDiv.innerHTML = '⚠️ Loading is taking longer than expected.<br>Please wait...';
         }, 15000);
+        
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type}`;
+            statusDiv.style.display = 'block';
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
+        }
+        
         loader.load(plyUrl,
             (geometry) => {
                 clearTimeout(loadingTimeout);
                 if (loadingDiv && loadingDiv.parentNode) container.removeChild(loadingDiv);
-                console.log('PLY loaded successfully! Points:', geometry.attributes.position.count);
+                console.log('PLY loaded! Points:', geometry.attributes.position.count);
                 geometry.computeBoundingBox();
                 const center = geometry.boundingBox.getCenter(new THREE.Vector3());
                 let material;
-                if (geometry.hasAttribute('color')) {
-                    material = new THREE.PointsMaterial({ size: 0.08, vertexColors: true });
-                } else {
-                    material = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.08 });
-                }
+                if (geometry.hasAttribute('color')) material = new THREE.PointsMaterial({ size: 0.08, vertexColors: true });
+                else material = new THREE.PointsMaterial({ color: 0x44aaff, size: 0.08 });
                 pointCloud = new THREE.Points(geometry, material);
                 pointCloud.position.sub(center);
                 scene.add(pointCloud);
                 const size = geometry.boundingBox.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
-                const distance = maxDim * 1.5;
-                camera.position.set(distance, distance * 0.6, distance);
+                camera.position.set(maxDim * 1.5, maxDim * 0.9, maxDim * 1.5);
                 controls.target.set(0, 0, 0);
                 controls.update();
-                const numPoints = geometry.attributes.position.count;
-                document.getElementById('info').innerHTML = `📡 <strong>PCS-View</strong> | ${numPoints.toLocaleString()} points | Stonex Compatible | ${modelName.substring(0, 12)}...`;
-                document.getElementById('measure-result').innerHTML = '✅ Loaded successfully! Ready to use.';
-                setTimeout(() => { if (!measureMode) document.getElementById('measure-result').innerHTML = 'Ready'; }, 3000);
+                document.getElementById('info').innerHTML = `📡 <strong>PCS-View</strong> | ${geometry.attributes.position.count.toLocaleString()} points | ${modelName.substring(0, 12)}...`;
+                showStatus('✅ Point cloud loaded successfully!', 'success');
             },
-            (xhr) => {
-                const percent = Math.floor((xhr.loaded / xhr.total) * 100);
-                if (loadingDiv) loadingDiv.innerHTML = `⏳ Loading point cloud... ${percent}%<br><small>Please wait</small>`;
-                console.log(`Loading progress: ${percent}%`);
-            },
+            (xhr) => { const percent = Math.floor((xhr.loaded / xhr.total) * 100); if (loadingDiv) loadingDiv.innerHTML = `⏳ Loading... ${percent}%`; },
             (error) => {
                 clearTimeout(loadingTimeout);
-                console.error('Error loading PLY:', error);
-                if (loadingDiv && loadingDiv.parentNode) {
-                    loadingDiv.innerHTML = '❌ Failed to load point cloud.<br><br>Please go back and try again with a smaller file.';
+                console.error('Error:', error);
+                if (loadingDiv) {
+                    loadingDiv.innerHTML = '❌ Failed to load point cloud.<br><br>Please go back and try again.';
                     loadingDiv.style.background = 'rgba(211,32,17,0.95)';
                     const retryBtn = document.createElement('button');
                     retryBtn.textContent = '← Go Back';
@@ -180,109 +199,163 @@
                     retryBtn.style.padding = '10px 20px';
                     retryBtn.style.background = '#C9A96E';
                     retryBtn.style.color = '#1A1A2E';
-                    retryBtn.style.border = 'none';
-                    retryBtn.style.borderRadius = '8px';
-                    retryBtn.style.cursor = 'pointer';
                     retryBtn.onclick = () => { window.location.href = '/'; };
                     loadingDiv.appendChild(document.createElement('br'));
                     loadingDiv.appendChild(retryBtn);
                 }
             }
         );
-
+        
+        // Info Button
         document.getElementById('info-btn')?.addEventListener('click', async () => {
             const metaPanel = document.getElementById('metadata-display');
-            const measureResult = document.getElementById('measure-result');
             try {
-                measureResult.innerHTML = '📊 Loading metadata...';
                 const response = await fetch(`/api/info/${modelName}`);
                 const data = await response.json();
                 document.getElementById('meta-points').innerHTML = `Points: ${data.point_count?.toLocaleString() || 'N/A'}`;
-                if (data.bounds) document.getElementById('meta-bounds').innerHTML = `X: ${data.bounds.min[0]?.toFixed(1) || '0'} to ${data.bounds.max[0]?.toFixed(1) || '0'}`;
+                if (data.bounds) document.getElementById('meta-bounds').innerHTML = `X: ${data.bounds.min[0]?.toFixed(1)} to ${data.bounds.max[0]?.toFixed(1)}`;
                 document.getElementById('meta-size').innerHTML = `Size: ${data.file_size_mb || '?'} MB`;
                 metaPanel.style.display = 'block';
-                measureResult.innerHTML = '✅ Metadata loaded';
-                setTimeout(() => { metaPanel.style.display = 'none'; if (!measureMode) measureResult.innerHTML = 'Ready'; }, 8000);
-            } catch (e) { console.error('Failed to load metadata:', e); measureResult.innerHTML = '❌ Failed to load metadata'; }
+                setTimeout(() => metaPanel.style.display = 'none', 8000);
+            } catch (e) { showStatus('Failed to load metadata', 'error'); }
         });
-
+        
+        // Volume Button
         document.getElementById('volume-btn')?.addEventListener('click', async () => {
-            const measureResult = document.getElementById('measure-result');
-            measureResult.innerHTML = '📐 Calculating volume...';
+            showStatus('📐 Calculating volume...', 'info');
             try {
-                const response = await fetch(`/api/volume/${modelName}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const response = await fetch(`/api/volume/${modelName}`, { method: 'POST' });
                 const data = await response.json();
-                if (data.success) measureResult.innerHTML = `📐 Volume: ${data.volume_cubic_meters} m³ | Area: ${data.surface_area_sq_meters} m²`;
-                else if (data.error) measureResult.innerHTML = `❌ ${data.error}`;
-                else measureResult.innerHTML = `❌ Volume calculation failed`;
-            } catch (e) { console.error('Volume error:', e); measureResult.innerHTML = `❌ Error: ${e.message}`; }
+                if (data.success) showStatus(`📐 Volume: ${data.volume_cubic_meters} m³`, 'success');
+                else showStatus('Volume calculation failed', 'error');
+            } catch (e) { showStatus('Error calculating volume', 'error'); }
         });
-
+        
+        // Advanced Volume
+        document.getElementById('advanced-volume-btn')?.addEventListener('click', async () => {
+            showStatus('📊 Calculating advanced volume...', 'info');
+            try {
+                const response = await fetch(`/api/volume/advanced/${modelName}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) showStatus(`📊 Volume: ${data.volume_cubic_meters} m³ | Area: ${data.area_sqm} m²`, 'success');
+                else showStatus('Advanced volume failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Cut & Fill
+        document.getElementById('cutfill-btn')?.addEventListener('click', async () => {
+            showStatus('📐 Performing cut & fill analysis...', 'info');
+            try {
+                const response = await fetch(`/api/cutfill/${modelName}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) showStatus(`✂️ Cut: ${data.cut_volume_cubic_meters} m³ | 🧱 Fill: ${data.fill_volume_cubic_meters} m³`, 'success');
+                else showStatus('Cut/fill analysis failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Classify by Height
+        document.getElementById('classify-height-btn')?.addEventListener('click', async () => {
+            showStatus('🏔️ Classifying by height...', 'info');
+            try {
+                const response = await fetch(`/api/classify/height/${modelName}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    const classes = data.classifications;
+                    showStatus(`✅ Ground: ${classes.low_vegetation} | Vegetation: ${classes.medium_vegetation} | Building: ${classes.building}`, 'success');
+                } else showStatus('Classification failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Ground Classification
+        document.getElementById('classify-ground-btn')?.addEventListener('click', async () => {
+            showStatus('🌍 Classifying ground points...', 'info');
+            try {
+                const response = await fetch(`/api/classify/ground/${modelName}`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) showStatus(`🌍 Ground: ${data.ground_points} points (${data.ground_percentage}%)`, 'success');
+                else showStatus('Ground classification failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Orthophoto
+        document.getElementById('orthophoto-btn')?.addEventListener('click', async () => {
+            showStatus('🖼️ Generating orthophoto...', 'info');
+            try {
+                const response = await fetch(`/api/orthophoto/generate/${modelName}?resolution=0.1`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success && data.orthophoto_url) {
+                    window.open(data.orthophoto_url, '_blank');
+                    showStatus('✅ Orthophoto generated!', 'success');
+                } else showStatus('Orthophoto generation failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Contours
+        document.getElementById('contours-btn')?.addEventListener('click', async () => {
+            showStatus('🗺️ Generating contour lines...', 'info');
+            try {
+                const response = await fetch(`/api/contours/generate/${modelName}?interval=1.0`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) showStatus(`🗺️ ${data.number_of_contours} contours generated (${data.min_elevation} to ${data.max_elevation} m)`, 'success');
+                else showStatus('Contour generation failed', 'error');
+            } catch (e) { showStatus('Error', 'error'); }
+        });
+        
+        // Export CSV
         document.getElementById('export-csv-btn')?.addEventListener('click', async () => {
-            const measureResult = document.getElementById('measure-result');
-            measureResult.innerHTML = '📄 Preparing CSV export...';
+            showStatus('📄 Preparing CSV export...', 'info');
             try {
                 const response = await fetch(`/api/export/${modelName}/csv`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) throw new Error('Export failed');
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${modelName.replace('.ply', '.csv')}`;
-                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                measureResult.innerHTML = '✅ CSV export complete! Check downloads folder.';
-            } catch (error) { console.error('Export error:', error); measureResult.innerHTML = '❌ Export failed. Please try again.'; }
-            setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 3000);
+                URL.revokeObjectURL(url);
+                showStatus('✅ CSV export complete!', 'success');
+            } catch (error) { showStatus('Export failed', 'error'); }
         });
-
+        
+        // Export TXT
         document.getElementById('export-txt-btn')?.addEventListener('click', async () => {
-            const measureResult = document.getElementById('measure-result');
-            measureResult.innerHTML = '📄 Preparing TXT export...';
+            showStatus('📄 Preparing TXT export...', 'info');
             try {
                 const response = await fetch(`/api/export/${modelName}/txt`);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (!response.ok) throw new Error('Export failed');
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${modelName.replace('.ply', '.txt')}`;
-                document.body.appendChild(a);
                 a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-                measureResult.innerHTML = '✅ TXT export complete! Check downloads folder.';
-            } catch (error) { console.error('Export error:', error); measureResult.innerHTML = '❌ Export failed. Please try again.'; }
-            setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 3000);
+                URL.revokeObjectURL(url);
+                showStatus('✅ TXT export complete!', 'success');
+            } catch (error) { showStatus('Export failed', 'error'); }
         });
-
+        
+        // Center View
         document.getElementById('center-view-btn')?.addEventListener('click', () => {
-            if (pointCloud) {
-                camera.position.set(10, 6, 12);
-                controls.target.set(0, 0, 0);
-                controls.update();
-                const measureResult = document.getElementById('measure-result');
-                measureResult.innerHTML = '🎯 View centered';
-                setTimeout(() => { if (!measureMode) measureResult.innerHTML = 'Ready'; }, 2000);
-            }
+            if (pointCloud) { camera.position.set(10, 6, 12); controls.target.set(0, 0, 0); controls.update(); }
         });
-
-        let measureMode = false;
-        let pointsClicked = [];
-        let lineObject = null;
-        let spheres = [];
-        const measureBtn = document.getElementById('measure-btn');
-        const measureResult = document.getElementById('measure-result');
+        
+        // Reset View
+        document.getElementById('reset-view')?.addEventListener('click', () => {
+            if (pointCloud) { camera.position.set(10, 6, 12); controls.target.set(0, 0, 0); controls.update(); }
+        });
+        
+        // Measure Distance Tool
+        let measureMode = false, pointsClicked = [], lineObject = null, spheres = [];
+        const measureBtn = document.getElementById('measure-btn'), measureResult = document.getElementById('measure-result');
         measureBtn.addEventListener('click', () => {
             measureMode = !measureMode;
-            if (measureMode) { measureBtn.style.background = '#ff3300'; measureResult.textContent = '🔴 Measure mode ON: Click two points'; clearMeasurement(); }
+            if (measureMode) { measureBtn.style.background = '#ff3300'; measureResult.textContent = '🔴 Click two points'; clearMeasurement(); }
             else { measureBtn.style.background = '#D32011'; measureResult.textContent = 'Ready'; clearMeasurement(); }
         });
         function clearMeasurement() { if (lineObject) scene.remove(lineObject); spheres.forEach(s => scene.remove(s)); spheres = []; pointsClicked = []; }
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
+        
+        const raycaster = new THREE.Raycaster(), mouse = new THREE.Vector2();
         renderer.domElement.addEventListener('click', (event) => {
             if (!measureMode || !pointCloud) return;
             const rect = renderer.domElement.getBoundingClientRect();
@@ -294,14 +367,14 @@
                 const point = intersects[0].point;
                 pointsClicked.push(point.clone());
                 const sphereGeo = new THREE.SphereGeometry(0.08, 16, 16);
-                const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0x442200 });
+                const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff6600 });
                 const sphere = new THREE.Mesh(sphereGeo, sphereMat);
                 sphere.position.copy(point);
                 scene.add(sphere);
                 spheres.push(sphere);
                 if (pointsClicked.length === 2) {
                     const distance = pointsClicked[0].distanceTo(pointsClicked[1]);
-                    measureResult.innerHTML = `📏 Distance: ${distance.toFixed(3)} units | Click Measure button to start over`;
+                    measureResult.innerHTML = `📏 Distance: ${distance.toFixed(3)} units`;
                     const pointsArray = [pointsClicked[0], pointsClicked[1]];
                     const lineGeometry = new THREE.BufferGeometry().setFromPoints(pointsArray);
                     const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffaa00 });
@@ -309,9 +382,10 @@
                     lineObject = new THREE.Line(lineGeometry, lineMaterial);
                     scene.add(lineObject);
                     pointsClicked = [];
-                } else if (pointsClicked.length === 1) { measureResult.textContent = '📍 First point selected. Click second point.'; }
+                } else if (pointsClicked.length === 1) measureResult.textContent = '📍 First point selected. Click second point.';
             }
         });
+        
         const coordDisplay = document.getElementById('coord-display');
         renderer.domElement.addEventListener('mousemove', (event) => {
             if (!pointCloud) return;
@@ -320,15 +394,14 @@
             mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObject(pointCloud);
-            if (intersects.length > 0) { const pt = intersects[0].point; coordDisplay.innerHTML = `📍 (${pt.x.toFixed(2)}, ${pt.y.toFixed(2)}, ${pt.z.toFixed(2)})`; }
-            else { coordDisplay.innerHTML = `📍 Hover over the point cloud`; }
+            if (intersects.length > 0) coordDisplay.innerHTML = `📍 (${intersects[0].point.x.toFixed(2)}, ${intersects[0].point.y.toFixed(2)}, ${intersects[0].point.z.toFixed(2)})`;
+            else coordDisplay.innerHTML = `📍 Hover over the point cloud`;
         });
-        document.getElementById('reset-view').addEventListener('click', () => { if (pointCloud) { camera.position.set(10, 6, 12); controls.target.set(0, 0, 0); controls.update(); } });
+        
         function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
         animate();
-        window.addEventListener('resize', onWindowResize);
-        function onWindowResize() { const width = container.clientWidth; const height = container.clientHeight; camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); }
-        setTimeout(() => onWindowResize(), 100);
+        window.addEventListener('resize', () => { camera.aspect = container.clientWidth / container.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(container.clientWidth, container.clientHeight); });
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 100);
     </script>
 </body>
 </html>

@@ -3,595 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCS-View | Professional Point Cloud Platform - Compatible with Stonex</title>
+    <title>PCS-View | Professional Point Cloud Platform</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --afghan-black: #1A1A2E;
-            --afghan-red: #D32011;
-            --afghan-green: #009639;
-            --afghan-gold: #C9A96E;
-            --afghan-sand: #E8DCC6;
-            --afghan-navy: #16213E;
-            --afghan-cream: #F9F6F0;
+            --primary-dark: #1A1A2E;
+            --primary-red: #D32011;
+            --primary-green: #009639;
+            --primary-gold: #C9A96E;
+            --primary-sand: #E8DCC6;
+            --primary-cream: #F9F6F0;
         }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--afghan-cream);
-            color: var(--afghan-black);
-            line-height: 1.5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .navbar {
-            background: rgba(255,255,255,0.98);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            padding: 16px 0;
-            border-bottom: 2px solid var(--afghan-gold);
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 40px;
-        }
-
-        .navbar .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-        }
-
-        .logo-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--afghan-navy), var(--afghan-green));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .logo-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--afghan-navy);
-        }
-        .logo-name span { color: var(--afghan-red); }
-        .logo-tagline { font-size: 0.7rem; letter-spacing: 2px; color: var(--afghan-green); }
-
+        body { font-family: 'Inter', sans-serif; background: var(--primary-cream); color: var(--primary-dark); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
+        .navbar { background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 1000; padding: 16px 0; border-bottom: 2px solid var(--primary-gold); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
+        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .logo-name { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
+        .logo-name span { color: var(--primary-red); }
+        .logo-tagline { font-size: 0.7rem; letter-spacing: 2px; color: var(--primary-green); }
         .nav-links { display: flex; gap: 32px; list-style: none; }
-        .nav-links a { text-decoration: none; color: var(--afghan-black); font-weight: 500; transition: color 0.2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--afghan-red); }
-
-        .profile-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--afghan-navy);
-            color: white;
-            padding: 8px 18px;
-            border-radius: 40px;
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-        .profile-btn:hover { background: var(--afghan-red); transform: translateY(-2px); }
-
-        .hero {
-            background: linear-gradient(135deg, var(--afghan-navy) 0%, #1a1a2e 100%);
-            color: white;
-            padding: 80px 0;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10 L45 20 L55 20 L48 28 L51 38 L40 33 L29 38 L32 28 L25 20 L35 20 Z' fill='%23C9A96E' fill-opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-        }
-        .hero .container {
-            position: relative;
-            z-index: 2;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-        }
+        .nav-links a { text-decoration: none; color: var(--primary-dark); font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary-red); }
+        .profile-btn { display: flex; align-items: center; gap: 10px; background: var(--primary-dark); color: white; padding: 8px 18px; border-radius: 40px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s; }
+        .profile-btn:hover { background: var(--primary-red); transform: translateY(-2px); }
+        .hero { background: linear-gradient(135deg, #16213E 0%, #1a1a2e 100%); color: white; padding: 80px 0; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10 L45 20 L55 20 L48 28 L51 38 L40 33 L29 38 L32 28 L25 20 L35 20 Z' fill='%23C9A96E' fill-opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; }
+        .hero .container { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
         .hero-title { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 800; line-height: 1.2; }
-        .hero-title span { color: var(--afghan-gold); }
+        .hero-title span { color: var(--primary-gold); }
         .hero-subtitle { font-size: 1.1rem; margin: 20px 0; opacity: 0.9; }
-
-        .btn-primary {
-            background: var(--afghan-red);
-            color: white;
-            padding: 14px 32px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .btn-primary { background: var(--primary-red); color: white; padding: 14px 32px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; border: none; cursor: pointer; transition: all 0.3s; }
         .btn-primary:hover { background: #b0281a; transform: translateY(-2px); }
-
-        .upload-section {
-            background: linear-gradient(135deg, var(--afghan-navy), #1a1a2e);
-            border-radius: 40px;
-            padding: 50px;
-            margin: 50px 0;
-            color: white;
-        }
-        .upload-section h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 15px; }
-
-        .upload-area {
-            background: rgba(255,255,255,0.1);
-            border: 2px dashed rgba(255,215,0,0.5);
-            border-radius: 24px;
-            padding: 50px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 30px;
-        }
-        .upload-area:hover { background: rgba(255,255,255,0.15); border-color: var(--afghan-gold); }
+        .btn-secondary { background: transparent; border: 2px solid var(--primary-gold); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.3s; text-decoration: none; }
+        .btn-secondary:hover { background: var(--primary-gold); color: #16213E; transform: translateY(-2px); }
+        .format-badge { display: inline-block; background: rgba(201,169,110,0.2); border: 1px solid var(--primary-gold); border-radius: 20px; padding: 4px 12px; font-size: 0.7rem; margin: 5px; }
+        .upload-section { background: linear-gradient(135deg, #16213E, #1a1a2e); border-radius: 40px; padding: 50px; margin: 50px 0; color: white; }
+        .upload-area { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,215,0,0.5); border-radius: 24px; padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; margin-top: 30px; }
+        .upload-area:hover { background: rgba(255,255,255,0.15); border-color: var(--primary-gold); }
         .upload-area i { font-size: 3rem; margin-bottom: 15px; }
         #fileInput { display: none; }
-
-        .upload-btn {
-            background: var(--afghan-gold);
-            color: var(--afghan-navy);
-            border: none;
-            padding: 14px 40px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .upload-btn { background: var(--primary-gold); color: var(--primary-dark); border: none; padding: 14px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem; cursor: pointer; margin-top: 20px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; }
         .upload-btn:hover:not(:disabled) { background: white; transform: translateY(-2px); }
         .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .status {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 12px;
-            display: none;
-        }
+        .status { margin-top: 20px; padding: 15px; border-radius: 12px; display: none; }
         .status.info { background: rgba(0,212,255,0.2); display: block; }
         .status.error { background: rgba(255,68,68,0.2); display: block; }
         .status.success { background: rgba(68,255,68,0.2); display: block; }
-
-        .file-info {
-            margin-top: 15px;
-            font-size: 0.9rem;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            display: inline-block;
-        }
-
-        .format-badge {
-            display: inline-block;
-            background: rgba(201,169,110,0.2);
-            border: 1px solid var(--afghan-gold);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 0.7rem;
-            margin: 5px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin: 50px 0;
-        }
-        .feature-card {
-            background: white;
-            border-radius: 24px;
-            padding: 30px;
-            text-align: center;
-            transition: all 0.3s;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        }
+        .file-info { margin-top: 15px; font-size: 0.9rem; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; display: inline-block; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 50px 0; }
+        .feature-card { background: white; border-radius: 24px; padding: 30px; text-align: center; transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
         .feature-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--afghan-navy), var(--afghan-green));
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            color: white;
-            font-size: 1.8rem;
-        }
-
-        .profile-section {
-            background: white;
-            border-radius: 30px;
-            padding: 40px;
-            margin: 50px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
+        .feature-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem; }
+        .profile-section { background: white; border-radius: 30px; padding: 40px; margin: 50px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .profile-header { display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, var(--afghan-navy), var(--afghan-green));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: var(--afghan-gold);
-        }
-        .profile-info h3 { font-size: 1.8rem; color: var(--afghan-navy); }
-        .profile-info .title { color: var(--afghan-red); font-weight: 600; margin: 5px 0; }
-        .skill-tag {
-            background: var(--afghan-sand);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: inline-block;
-            margin: 5px;
-        }
-
-        .footer {
-            background: var(--afghan-navy);
-            color: white;
-            padding: 60px 0 30px;
-            margin-top: auto;
-        }
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-        .footer h4 {
-            margin-bottom: 20px;
-            border-left: 3px solid var(--afghan-gold);
-            padding-left: 12px;
-        }
+        .profile-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary-gold); }
+        .profile-info h3 { font-size: 1.8rem; color: var(--primary-dark); }
+        .profile-info .title { color: var(--primary-red); font-weight: 600; margin: 5px 0; }
+        .skill-tag { background: var(--primary-sand); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin: 5px; }
+        .footer { background: #16213E; color: white; padding: 60px 0 30px; margin-top: auto; }
+        .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
+        .footer h4 { margin-bottom: 20px; border-left: 3px solid var(--primary-gold); padding-left: 12px; }
         .footer ul { list-style: none; }
         .footer ul li { margin-bottom: 10px; }
-        .footer a {
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .footer a:hover { color: var(--afghan-gold); }
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .social-links a {
-            width: 36px;
-            height: 36px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .footer-bottom {
-            text-align: center;
-            padding-top: 30px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.85rem;
-        }
-        .stonex-note {
-            background: rgba(201,169,110,0.15);
-            border-left: 4px solid var(--afghan-gold);
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 12px;
-        }
-
-        @media (max-width: 900px) {
-            .hero .container { grid-template-columns: 1fr; }
-            .nav-links { display: none; }
-            .hero-title { font-size: 2.2rem; }
-            .container { padding: 0 20px; }
-        }
+        .footer a { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; }
+        .footer a:hover { color: var(--primary-gold); }
+        .footer-bottom { text-align: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
+        @media (max-width: 900px) { .hero .container { grid-template-columns: 1fr; } .nav-links { display: none; } .hero-title { font-size: 2.2rem; } .container { padding: 0 20px; } }
     </style>
 </head>
 <body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><div class="logo-icon">🌍</div><div><div class="logo-name">PCS<span>-View</span></div><div class="logo-tagline">Point Cloud Share Viewer</div></div></a>
+            <ul class="nav-links"><li><a href="/" class="active">Home</a></li><li><a href="/dashboard">Dashboard</a></li></ul>
+            <a href="#" class="profile-btn" onclick="document.getElementById('profile-section').scrollIntoView({behavior:'smooth'}); return false;"><i class="fas fa-user"></i> My Profile</a>
+        </div>
+    </nav>
 
-<nav class="navbar">
-    <div class="container">
-        <a href="/" class="logo">
-            <div class="logo-icon">🌍</div>
+    <section class="hero">
+        <div class="container">
             <div>
-                <div class="logo-name">PCS<span>-View</span></div>
-                <div class="logo-tagline">Point Cloud Share Viewer</div>
+                <h1 class="hero-title">Professional <span>Point Cloud Platform</span></h1>
+                <p class="hero-subtitle">Upload LAS, E57, PLY from X120GO scanner → Convert → Analyze → Share instantly</p>
+                <div style="margin-bottom: 20px;"><span class="format-badge">.las</span><span class="format-badge">.e57</span><span class="format-badge">.ply</span><span class="format-badge">.xyz</span><span class="format-badge">.cx3d</span></div>
+                <button class="btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})"><i class="fas fa-cloud-upload-alt"></i> Start Converting</button>
+                <a href="/dashboard" class="btn-secondary" style="margin-left: 15px;"><i class="fas fa-cloud"></i> Cloud Dashboard</a>
             </div>
-        </a>
-        <ul class="nav-links">
-            <li><a href="/" class="active">Home</a></li>
-            <li><a href="#" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'}); return false;">Upload</a></li>
-            <li><a href="#" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'}); return false;">Features</a></li>
-        </ul>
-        <a href="#" class="profile-btn" onclick="document.getElementById('profile-section').scrollIntoView({behavior:'smooth'}); return false;">
-            <i class="fas fa-user"></i> My Profile
-        </a>
-    </div>
-</nav>
+            <div style="text-align: center;"><i class="fas fa-cube" style="font-size: 4rem; color: var(--primary-gold);"></i><i class="fas fa-draw-polygon" style="font-size: 4rem; margin-left: 20px; color: var(--primary-gold);"></i><i class="fas fa-chart-line" style="font-size: 4rem; margin-left: 20px; color: var(--primary-gold);"></i></div>
+        </div>
+    </section>
 
-<section class="hero">
     <div class="container">
-        <div>
-            <h1 class="hero-title">Stonex Compatible<br><span>Point Cloud Platform</span></h1>
-            <p class="hero-subtitle">Upload LAS, E57, PLY, XYZ from X120GO scanner or Cube-3d software → Convert → Visualize → Share instantly</p>
-            <button class="btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})">
-                <i class="fas fa-cloud-upload-alt"></i> Start Converting
-            </button>
-        </div>
-        <div style="text-align: center;">
-            <i class="fas fa-cube" style="font-size: 4rem; color: var(--afghan-gold);"></i>
-            <i class="fas fa-draw-polygon" style="font-size: 4rem; margin-left: 20px; color: var(--afghan-gold);"></i>
-            <i class="fas fa-chart-line" style="font-size: 4rem; margin-left: 20px; color: var(--afghan-gold);"></i>
-            <div style="margin-top: 20px;">
-                <span class="format-badge">.las</span>
-                <span class="format-badge">.e57</span>
-                <span class="format-badge">.ply</span>
-                <span class="format-badge">.xyz</span>
-                <span class="format-badge">.cx3d</span>
-            </div>
-        </div>
-    </div>
-</section>
-
-<div class="container">
-    <div id="upload-section">
-        <div class="upload-section">
+        <div id="upload-section"><div class="upload-section">
             <h2><i class="fas fa-cloud-upload-alt"></i> Stonex Workflow Integration</h2>
-            <p>Export from X120GO scanner or Cube-3d → Upload here → Share with clients in seconds</p>
-
-            <div class="stonex-note">
-                <i class="fas fa-check-circle" style="color: var(--afghan-gold);"></i>
-                <strong>Compatible with Stonex formats:</strong> LAS, LAZ, E57, PLY, XYZ, TXT, CX3D (Cube-3d native)
-            </div>
-
-            <div class="upload-area" id="uploadArea">
-                <i class="fas fa-database"></i>
-                <div style="font-size: 1.2rem;">Drag & drop your point cloud file</div>
-                <div style="font-size: 0.85rem;">or click to browse</div>
-                <input type="file" id="fileInput" accept=".las,.laz,.ply,.e57,.xyz,.txt,.cx3d">
-                <div id="fileInfo" style="margin: 15px 0;"></div>
-                <button class="upload-btn" id="uploadBtn" disabled>
-                    <i class="fas fa-exchange-alt"></i> CONVERT & VIEW
-                </button>
-            </div>
+            <p>Export from X120GO scanner or Cube-3d → Upload here → Analyze with professional tools</p>
+            <div class="upload-area" id="uploadArea"><i class="fas fa-database"></i><div style="font-size: 1.2rem;">Drag & drop your point cloud file</div><div style="font-size: 0.85rem;">or click to browse</div>
+            <input type="file" id="fileInput" accept=".las,.laz,.ply,.e57,.xyz,.txt,.cx3d"><div id="fileInfo" style="margin: 15px 0;"></div>
+            <button class="upload-btn" id="uploadBtn" disabled><i class="fas fa-exchange-alt"></i> CONVERT & VIEW</button></div>
             <div class="status" id="status"></div>
-            <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;">
-                <i class="fas fa-shield-alt"></i> Max 100MB | Secure | No permanent storage
-            </div>
-        </div>
-    </div>
+            <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;"><i class="fas fa-shield-alt"></i> Max 50MB | Secure | Cloud Storage Available</div>
+        </div></div>
 
-    <div id="features">
-        <h2 style="font-family: 'Playfair Display', serif; font-size: 2rem; margin: 40px 0 20px;">Professional Features</h2>
+        <div id="features"><h2 style="font-family: 'Playfair Display', serif; font-size: 2rem; margin: 40px 0 20px; text-align: center;">Professional Features</h2>
         <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-cube"></i></div>
-                <h3>Volume Calculation</h3>
-                <p>Calculate stockpile volumes for construction and mining applications</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-file-export"></i></div>
-                <h3>DXF Export</h3>
-                <p>Export point clouds to DXF for CAD software integration</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-info-circle"></i></div>
-                <h3>Point Cloud Metadata</h3>
-                <p>View point count, bounds, density, and other essential metrics</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
-                <h3>Land Cover Analysis</h3>
-                <p>Multi-temporal analysis using ESA CCI datasets (1985-2022)</p>
-            </div>
-        </div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-cube"></i></div><h3>Volume Calculation</h3><p>Advanced volume calculation with cut/fill analysis</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-simple"></i></div><h3>Point Cloud Classification</h3><p>Automatic classification by height, intensity, ground detection</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-image"></i></div><h3>Orthophoto Generation</h3><p>Generate orthophotos and contour lines from point clouds</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-line"></i></div><h3>Cross Sections & Profiles</h3><p>Generate cross sections, profiles, and contour lines</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div><h3>Cloud Storage</h3><p>75GB free cloud storage. Access anytime, anywhere</p></div>
+            <div class="feature-card"><div class="feature-icon"><i class="fas fa-share-alt"></i></div><h3>Easy Sharing</h3><p>Share your projects with clients via simple links</p></div>
+        </div></div>
+
+        <div id="profile-section"><div class="profile-section"><div class="profile-header"><div class="profile-avatar"><i class="fas fa-user-graduate"></i></div>
+        <div class="profile-info"><h3>Ghulam Abbas Zafari</h3><div class="title">Geoinformatics Engineer | MSc Politecnico di Milano</div>
+        <p>Specializing in GIS, remote sensing, and machine learning for environmental monitoring. Former Cadastral Survey Engineer with 4+ years field experience.</p>
+        <div><span class="skill-tag">ArcGIS Pro</span><span class="skill-tag">QGIS</span><span class="skill-tag">Python</span><span class="skill-tag">Google Earth Engine</span><span class="skill-tag">GNSS/RTK</span><span class="skill-tag">LiDAR</span><span class="skill-tag">Stonex X120GO</span><span class="skill-tag">Cube-3d</span></div></div></div>
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;"><p><i class="fas fa-graduation-cap" style="color: var(--primary-red);"></i> <strong>MSc Thesis:</strong> "Land Cover Dynamics and Transitions in Italy: Multi-Temporal Analysis with Global Datasets" (2025)</p>
+        <p><i class="fas fa-briefcase"></i> <strong>Experience:</strong> Cadastral Survey Engineer (2018-2021) | High-precision RTK surveys, GNSS, Total Stations</p>
+        <p><i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com | <i class="fas fa-map-marker-alt"></i> Milan, Italy | <i class="fas fa-phone"></i> +39 379 138 7487</p></div></div></div>
     </div>
 
-    <div id="profile-section">
-        <div class="profile-section">
-            <div class="profile-header">
-                <div class="profile-avatar"><i class="fas fa-user-graduate"></i></div>
-                <div class="profile-info">
-                    <h3>Ghulam Abbas Zafari</h3>
-                    <div class="title">Geoinformatics Engineer | MSc Politecnico di Milano</div>
-                    <p>Specializing in GIS, remote sensing, and machine learning for environmental monitoring. Former Cadastral Survey Engineer with 4+ years field experience.</p>
-                    <div>
-                        <span class="skill-tag">ArcGIS Pro</span>
-                        <span class="skill-tag">QGIS</span>
-                        <span class="skill-tag">Python</span>
-                        <span class="skill-tag">Google Earth Engine</span>
-                        <span class="skill-tag">GNSS/RTK</span>
-                        <span class="skill-tag">LiDAR</span>
-                        <span class="skill-tag">Stonex X120GO</span>
-                        <span class="skill-tag">Cube-3d</span>
-                    </div>
-                </div>
-            </div>
-            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
-                <p><i class="fas fa-graduation-cap" style="color: var(--afghan-red);"></i> <strong>MSc Thesis:</strong> "Land Cover Dynamics and Transitions in Italy: Multi-Temporal Analysis with Global Datasets" (2025)</p>
-                <p><i class="fas fa-briefcase"></i> <strong>Experience:</strong> Cadastral Survey Engineer (2018-2021) | High-precision RTK surveys, GNSS, Total Stations</p>
-                <p><i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com | <i class="fas fa-map-marker-alt"></i> Milan, Italy | <i class="fas fa-phone"></i> +39 379 138 7487</p>
-            </div>
-        </div>
-    </div>
-</div>
+    <footer class="footer"><div class="container"><div class="footer-content"><div><h4>PCS-View</h4><p>Professional point cloud platform. Compatible with Stonex X120GO scanner and Cube-3d.</p></div>
+    <div><h4>Professional Tools</h4><ul><li>Volume Calculation</li><li>Point Cloud Classification</li><li>Orthophoto Generation</li><li>Cut & Fill Analysis</li><li>Cross Sections</li></ul></div>
+    <div><h4>Cloud Features</h4><ul><li>75GB Free Storage</li><li>Project Dashboard</li><li>Easy Sharing</li><li>Access Anywhere</li></ul></div>
+    <div><h4>Contact</h4><ul><li><i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com</li><li><i class="fas fa-phone"></i> +39 379 138 7487</li><li><i class="fas fa-map-marker-alt"></i> Milan, Italy</li></ul></div></div>
+    <div class="footer-bottom"><p>© 2026 PCS-View | Professional Point Cloud Platform | Built with FastAPI + Three.js</p></div></div></footer>
 
-<footer class="footer">
-    <div class="container">
-        <div class="footer-content">
-            <div>
-                <h4>PCS-View</h4>
-                <p>Professional point cloud visualization platform. Compatible with Stonex X120GO scanner and Cube-3d software.</p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                    <a href="#"><i class="fab fa-github"></i></a>
-                </div>
-            </div>
-            <div>
-                <h4>Supported Formats</h4>
-                <ul>
-                    <li>LAS / LAZ (LiDAR)</li>
-                    <li>E57 (Stonex X120GO)</li>
-                    <li>PLY (Web compatible)</li>
-                    <li>XYZ / TXT (ASCII)</li>
-                    <li>CX3D (Cube-3d)</li>
-                </ul>
-            </div>
-            <div>
-                <h4>Professional Tools</h4>
-                <ul>
-                    <li>Volume Calculation</li>
-                    <li>DXF Export</li>
-                    <li>Distance Measurement</li>
-                    <li>Point Cloud Metadata</li>
-                </ul>
-            </div>
-            <div>
-                <h4>Contact</h4>
-                <ul>
-                    <li><i class="fas fa-envelope"></i> <a href="mailto:ghalambabas.zafari@gmail.com">ghalambabas.zafari@gmail.com</a></li>
-                    <li><i class="fas fa-phone"></i> +39 379 138 7487</li>
-                    <li><i class="fas fa-map-marker-alt"></i> Milan, Italy</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© 2026 PCS-View | Designed for Stonex Workflow Compatibility | Built with FastAPI + Three.js</p>
-        </div>
-    </div>
-</footer>
-
-<script>
-const uploadArea = document.getElementById('uploadArea');
-const fileInput = document.getElementById('fileInput');
-const uploadBtn = document.getElementById('uploadBtn');
-const statusDiv = document.getElementById('status');
-const fileInfoDiv = document.getElementById('fileInfo');
-let selectedFile = null;
-
-uploadArea.addEventListener('click', () => fileInput.click());
-uploadArea.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    uploadArea.style.background = 'rgba(255,255,255,0.2)';
-});
-uploadArea.addEventListener('dragleave', () => {
-    uploadArea.style.background = 'rgba(255,255,255,0.1)';
-});
-uploadArea.addEventListener('drop', (e) => {
-    e.preventDefault();
-    uploadArea.style.background = 'rgba(255,255,255,0.1)';
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-
-fileInput.addEventListener('change', (e) => {
-    if (e.target.files.length) handleFile(e.target.files[0]);
-});
-
-function handleFile(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const allowed = ['las', 'laz', 'ply', 'e57', 'xyz', 'txt', 'cx3d'];
-    if (!allowed.includes(ext)) {
-        showStatus('error', '❌ Please select a supported file: LAS, LAZ, E57, PLY, XYZ, TXT, CX3D');
-        selectedFile = null;
-        uploadBtn.disabled = true;
-        fileInfoDiv.innerHTML = '';
-        return;
-    }
-
-    selectedFile = file;
-    uploadBtn.disabled = false;
-    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    fileInfoDiv.innerHTML = `<div class="file-info"><i class="fas fa-check-circle" style="color: #44ff44;"></i> Selected: ${file.name} (${sizeMB} MB)</div>`;
-    showStatus('info', '✅ File ready. Click "CONVERT & VIEW" to process.');
-}
-
-uploadBtn.addEventListener('click', async () => {
-    if (!selectedFile) {
-        showStatus('error', '❌ Please select a file first');
-        return;
-    }
-
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CONVERTING...';
-    showStatus('info', '<i class="fas fa-spinner fa-spin"></i> Converting point cloud... This may take 5-30 seconds.');
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
-    try {
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.success) {
-            showStatus('success', '✅ Conversion complete! Redirecting to 3D viewer...');
-            setTimeout(() => {
-                window.location.href = data.viewer_url;
-            }, 1000);
-        } else {
-            throw new Error(data.detail || 'Conversion failed.');
-        }
-    } catch (error) {
-        console.error('Upload error:', error);
-        showStatus('error', `❌ Error: ${error.message}`);
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> CONVERT & VIEW';
-    }
-});
-
-function showStatus(type, message) {
-    statusDiv.className = `status ${type}`;
-    statusDiv.innerHTML = message;
-}
-</script>
+    <script>
+        const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), uploadBtn = document.getElementById('uploadBtn'), statusDiv = document.getElementById('status'), fileInfoDiv = document.getElementById('fileInfo');
+        let selectedFile = null;
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.background = 'rgba(255,255,255,0.2)'; });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.style.background = 'rgba(255,255,255,0.1)'; });
+        uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.style.background = 'rgba(255,255,255,0.1)'; if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
+        function handleFile(file) { const ext = file.name.split('.').pop().toLowerCase(); const allowed = ['las', 'laz', 'ply', 'e57', 'xyz', 'txt', 'cx3d']; if (!allowed.includes(ext)) { showStatus('error', '❌ Unsupported format'); selectedFile = null; uploadBtn.disabled = true; fileInfoDiv.innerHTML = ''; return; }
+        selectedFile = file; uploadBtn.disabled = false; const sizeMB = (file.size / (1024 * 1024)).toFixed(2); fileInfoDiv.innerHTML = `<div class="file-info"><i class="fas fa-check-circle" style="color: #44ff44;"></i> ${file.name} (${sizeMB} MB)</div>`; showStatus('info', '✅ File ready'); }
+        uploadBtn.addEventListener('click', async () => { if (!selectedFile) return; uploadBtn.disabled = true; uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CONVERTING...'; showStatus('info', 'Converting...'); const formData = new FormData(); formData.append('file', selectedFile);
+        try { const response = await fetch('/api/upload', { method: 'POST', body: formData }); const data = await response.json(); if (response.ok && data.success) { showStatus('success', '✅ Conversion complete! Redirecting...'); setTimeout(() => { window.location.href = data.viewer_url; }, 1000); } else throw new Error(data.detail || 'Conversion failed'); }
+        catch (error) { showStatus('error', `❌ Error: ${error.message}`); uploadBtn.disabled = false; uploadBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> CONVERT & VIEW'; } });
+        function showStatus(type, message) { statusDiv.className = `status ${type}`; statusDiv.innerHTML = message; }
+    </script>
 </body>
 </html>
