@@ -2,153 +2,929 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PCS-View | Professional Point Cloud Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PCS-View | Professional Point Cloud Editor</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
     <style>
         :root {
-            --primary-dark: #1A1A2E;
-            --primary-red: #D32011;
-            --primary-green: #009639;
-            --primary-gold: #C9A96E;
-            --primary-sand: #E8DCC6;
-            --primary-cream: #F9F6F0;
+            --bg-main: #1a1f2e;
+            --bg-sidebar: #151a26;
+            --bg-panel: #1e2434;
+            --bg-card: #252c3f;
+            --bg-hover: #2d3548;
+            --bg-active: #3d465e;
+            --text-primary: #e8edf5;
+            --text-secondary: #8e9aaf;
+            --text-muted: #5c6a82;
+            --border-color: #2a3246;
+            --accent-blue: #4a9eff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-gold: #d4af37;
+            --drawing-red: #ff4444;
+            --drawing-blue: #44aaff;
+            --drawing-green: #44ff44;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--primary-cream); color: var(--primary-dark); line-height: 1.5; min-height: 100vh; display: flex; flex-direction: column; }
-        .navbar { background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 1000; padding: 16px 0; border-bottom: 2px solid var(--primary-gold); }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 40px; }
-        .navbar .container { display: flex; justify-content: space-between; align-items: center; }
-        .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .logo-name { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 800; color: var(--primary-dark); }
-        .logo-name span { color: var(--primary-red); }
-        .logo-tagline { font-size: 0.7rem; letter-spacing: 2px; color: var(--primary-green); }
-        .nav-links { display: flex; gap: 32px; list-style: none; }
-        .nav-links a { text-decoration: none; color: var(--primary-dark); font-weight: 500; transition: color 0.2s; }
-        .nav-links a:hover, .nav-links a.active { color: var(--primary-red); }
-        .profile-btn { display: flex; align-items: center; gap: 10px; background: var(--primary-dark); color: white; padding: 8px 18px; border-radius: 40px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s; }
-        .profile-btn:hover { background: var(--primary-red); transform: translateY(-2px); }
-        .hero { background: linear-gradient(135deg, #16213E 0%, #1a1a2e 100%); color: white; padding: 80px 0; position: relative; overflow: hidden; }
-        .hero::before { content: ''; position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10 L45 20 L55 20 L48 28 L51 38 L40 33 L29 38 L32 28 L25 20 L35 20 Z' fill='%23C9A96E' fill-opacity='0.05'/%3E%3C/svg%3E"); pointer-events: none; }
-        .hero .container { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-        .hero-title { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 800; line-height: 1.2; }
-        .hero-title span { color: var(--primary-gold); }
-        .hero-subtitle { font-size: 1.1rem; margin: 20px 0; opacity: 0.9; }
-        .btn-primary { background: var(--primary-red); color: white; padding: 14px 32px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; border: none; cursor: pointer; transition: all 0.3s; }
-        .btn-primary:hover { background: #b0281a; transform: translateY(-2px); }
-        .btn-secondary { background: transparent; border: 2px solid var(--primary-gold); color: white; padding: 12px 30px; border-radius: 50px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.3s; text-decoration: none; }
-        .btn-secondary:hover { background: var(--primary-gold); color: #16213E; transform: translateY(-2px); }
-        .format-badge { display: inline-block; background: rgba(201,169,110,0.2); border: 1px solid var(--primary-gold); border-radius: 20px; padding: 4px 12px; font-size: 0.7rem; margin: 5px; }
-        .upload-section { background: linear-gradient(135deg, #16213E, #1a1a2e); border-radius: 40px; padding: 50px; margin: 50px 0; color: white; }
-        .upload-area { background: rgba(255,255,255,0.1); border: 2px dashed rgba(255,215,0,0.5); border-radius: 24px; padding: 50px; text-align: center; cursor: pointer; transition: all 0.3s; margin-top: 30px; }
-        .upload-area:hover { background: rgba(255,255,255,0.15); border-color: var(--primary-gold); }
-        .upload-area i { font-size: 3rem; margin-bottom: 15px; }
-        #fileInput { display: none; }
-        .upload-btn { background: var(--primary-gold); color: var(--primary-dark); border: none; padding: 14px 40px; border-radius: 50px; font-weight: 700; font-size: 1.1rem; cursor: pointer; margin-top: 20px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 10px; }
-        .upload-btn:hover:not(:disabled) { background: white; transform: translateY(-2px); }
-        .upload-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .status { margin-top: 20px; padding: 15px; border-radius: 12px; display: none; }
-        .status.info { background: rgba(0,212,255,0.2); display: block; }
-        .status.error { background: rgba(255,68,68,0.2); display: block; }
-        .status.success { background: rgba(68,255,68,0.2); display: block; }
-        .file-info { margin-top: 15px; font-size: 0.9rem; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; display: inline-block; }
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin: 50px 0; }
-        .feature-card { background: white; border-radius: 24px; padding: 30px; text-align: center; transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
-        .feature-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 2rem; }
-        .profile-section { background: white; border-radius: 30px; padding: 40px; margin: 50px 0; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .profile-header { display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
-        .profile-avatar { width: 100px; height: 100px; background: linear-gradient(135deg, #16213E, #009639); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: var(--primary-gold); }
-        .profile-info h3 { font-size: 1.8rem; color: var(--primary-dark); }
-        .profile-info .title { color: var(--primary-red); font-weight: 600; margin: 5px 0; }
-        .skill-tag { background: var(--primary-sand); padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; display: inline-block; margin: 5px; }
-        .footer { background: #16213E; color: white; padding: 60px 0 30px; margin-top: auto; }
-        .footer-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 40px; margin-bottom: 40px; }
-        .footer h4 { margin-bottom: 20px; border-left: 3px solid var(--primary-gold); padding-left: 12px; }
-        .footer ul { list-style: none; }
-        .footer ul li { margin-bottom: 10px; }
-        .footer a { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; }
-        .footer a:hover { color: var(--primary-gold); }
-        .footer-bottom { text-align: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
-        @media (max-width: 900px) { .hero .container { grid-template-columns: 1fr; } .nav-links { display: none; } .hero-title { font-size: 2.2rem; } .container { padding: 0 20px; } }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-main); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        .app-container { display: flex; flex-direction: column; flex: 1; width: 100%; overflow: hidden; }
+        .top-ribbon { background: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .ribbon-header { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; height: 48px; border-bottom: 1px solid var(--border-color); }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #009639, #1a1f2e); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .logo-text { font-size: 1.2rem; font-weight: 700; }
+        .logo-text span { color: var(--accent-gold); }
+        .window-controls { display: flex; gap: 8px; }
+        .window-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .window-btn:hover { background: var(--bg-hover); }
+        .ribbon-tabs { display: flex; padding: 0 16px; gap: 4px; flex-wrap: wrap; }
+        .ribbon-tab { padding: 8px 16px; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all 0.2s; }
+        .ribbon-tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+        .ribbon-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        .ribbon-group { padding: 8px 16px; display: flex; gap: 16px; border-bottom: 1px solid var(--border-color); overflow-x: auto; }
+        .ribbon-group.hidden { display: none; }
+        .ribbon-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: all 0.2s; min-width: 60px; }
+        .ribbon-item:hover { background: var(--bg-hover); }
+        .ribbon-item i { font-size: 18px; color: var(--accent-blue); }
+        .ribbon-item span { font-size: 10px; }
+        .top-toolbar { background: var(--bg-sidebar); padding: 4px 16px; display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); overflow-x: auto; flex-wrap: wrap; flex-shrink: 0; }
+        .toolbar-btn { padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; background: transparent; color: var(--text-secondary); border: none; }
+        .toolbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        .toolbar-btn.active { background: var(--accent-blue); color: white; }
+        .toolbar-divider { width: 1px; height: 24px; background: var(--border-color); margin: 0 8px; }
+        .drawing-toolbar { background: var(--bg-card); padding: 4px 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+        .drawing-toolbar .toolbar-btn { font-size: 11px; padding: 4px 10px; }
+        .main-workspace { display: flex; flex: 1; overflow: hidden; }
+        .left-panel { width: 300px; background: var(--bg-panel); border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .panel-section { border-bottom: 1px solid var(--border-color); }
+        .panel-header { padding: 10px 16px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--accent-blue); cursor: pointer; display: flex; justify-content: space-between; background: var(--bg-sidebar); }
+        .panel-content { padding: 10px 16px; }
+        .panel-content.hidden { display: none; }
+        .property-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
+        .property-label { color: var(--text-secondary); }
+        .property-value { color: var(--text-primary); font-family: monospace; }
+        .pointcloud-tree { list-style: none; }
+        .tree-item { padding: 6px 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-radius: 6px; margin: 2px 8px; }
+        .tree-item:hover { background: var(--bg-hover); }
+        .tree-item.active { background: var(--bg-active); color: var(--accent-blue); }
+        .tree-item .name { flex: 1; font-size: 12px; }
+        .viewer-area { flex: 1; position: relative; background: #0a0e17; }
+        #canvas-container { width: 100%; height: 100%; }
+        .viewer-controls { position: absolute; bottom: 16px; left: 16px; display: flex; gap: 8px; z-index: 10; }
+        .viewer-btn { background: var(--bg-card); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; color: var(--text-primary); }
+        .viewer-btn:hover { background: var(--bg-hover); border-color: var(--accent-blue); }
+        .right-panel { width: 260px; background: var(--bg-panel); border-left: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .color-mode-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+        .color-mode-btn { padding: 6px; background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: 6px; font-size: 11px; cursor: pointer; text-align: center; }
+        .color-mode-btn.active { border-color: var(--accent-blue); background: var(--bg-active); color: var(--accent-blue); }
+        .status-bar { background: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 4px 16px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); height: 28px; align-items: center; flex-shrink: 0; }
+        .status-left { display: flex; gap: 16px; }
+        .footer { background: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 16px; display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .footer a { color: var(--accent-gold); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .upload-area { border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 16px; }
+        .upload-area:hover { border-color: var(--accent-blue); background: var(--bg-hover); }
+        .upload-area.drag-over { border-color: var(--accent-green); background: rgba(63,185,80,0.1); }
+        .upload-area i { font-size: 40px; margin-bottom: 12px; color: var(--accent-blue); }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--bg-card); border-radius: 12px; width: 450px; max-width: 90%; border: 1px solid var(--border-color); }
+        .modal-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-close { cursor: pointer; font-size: 20px; }
+        .modal-body { padding: 16px; }
+        .modal-footer { padding: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; }
+        .btn-primary { background: var(--accent-blue); color: white; }
+        .btn-secondary { background: var(--bg-active); color: var(--text-primary); }
+        .form-control { width: 100%; padding: 8px; background: var(--bg-sidebar); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); }
+        .progress-bar { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: #0d1117; z-index: 2000; display: none; }
+        .progress-fill { height: 100%; background: var(--accent-blue); width: 0%; transition: width 0.3s; }
+        .status-message { position: fixed; bottom: 40px; right: 20px; padding: 10px 16px; border-radius: 8px; z-index: 2000; display: none; background: var(--bg-card); border-left: 3px solid var(--accent-blue); font-size: 12px; }
+        .measure-result-display { font-size: 14px; font-weight: bold; color: var(--accent-green); margin-top: 10px; }
+        @media (max-width: 900px) { .left-panel, .right-panel { display: none; } .ribbon-tab { padding: 6px 10px; font-size: 0.7rem; } }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <a href="/" class="logo"><div class="logo-icon">🌍</div><div><div class="logo-name">PCS<span>-View</span></div><div class="logo-tagline">Point Cloud Share Viewer</div></div></a>
-            <ul class="nav-links"><li><a href="/" class="active">Home</a></li><li><a href="/dashboard">Dashboard</a></li></ul>
-            <a href="#" class="profile-btn" onclick="document.getElementById('profile-section').scrollIntoView({behavior:'smooth'}); return false;"><i class="fas fa-user"></i> My Profile</a>
+<div class="app-container">
+    <div class="top-ribbon">
+        <div class="ribbon-header">
+            <div class="logo"><div class="logo-icon">🌍</div><div class="logo-text">PCS<span>-View</span></div></div>
+            <div class="window-controls"><div class="window-btn" onclick="minimizeWindow()"><i class="fas fa-minus"></i></div><div class="window-btn" onclick="toggleFullscreen()"><i class="fas fa-expand"></i></div></div>
         </div>
-    </nav>
-
-    <section class="hero">
-        <div class="container">
-            <div>
-                <h1 class="hero-title">Professional <span>Point Cloud Platform</span></h1>
-                <p class="hero-subtitle">Upload LAS, E57, PLY from X120GO scanner → Convert → Analyze → Share instantly</p>
-                <div style="margin-bottom: 20px;"><span class="format-badge">.las</span><span class="format-badge">.e57</span><span class="format-badge">.ply</span><span class="format-badge">.xyz</span><span class="format-badge">.cx3d</span></div>
-                <button class="btn-primary" onclick="document.getElementById('upload-section').scrollIntoView({behavior:'smooth'})"><i class="fas fa-cloud-upload-alt"></i> Start Converting</button>
-                <a href="/dashboard" class="btn-secondary" style="margin-left: 15px;"><i class="fas fa-cloud"></i> Cloud Dashboard</a>
-            </div>
-            <div style="text-align: center;"><i class="fas fa-cube" style="font-size: 4rem; color: var(--primary-gold);"></i><i class="fas fa-draw-polygon" style="font-size: 4rem; margin-left: 20px; color: var(--primary-gold);"></i><i class="fas fa-chart-line" style="font-size: 4rem; margin-left: 20px; color: var(--primary-gold);"></i></div>
+        <div class="ribbon-tabs" id="ribbonTabs">
+            <div class="ribbon-tab active" data-ribbon="home">Home</div>
+            <div class="ribbon-tab" data-ribbon="pointclouds">Point Clouds</div>
+            <div class="ribbon-tab" data-ribbon="editing">Editing</div>
+            <div class="ribbon-tab" data-ribbon="register">Register</div>
+            <div class="ribbon-tab" data-ribbon="alignments">Alignments</div>
+            <div class="ribbon-tab" data-ribbon="modeling">Modeling</div>
+            <div class="ribbon-tab" data-ribbon="imagery">Imagery</div>
+            <div class="ribbon-tab" data-ribbon="geotags">GeoTags</div>
+            <div class="ribbon-tab" data-ribbon="cad">CAD</div>
         </div>
-    </section>
-
-    <div class="container">
-        <div id="upload-section"><div class="upload-section">
-            <h2><i class="fas fa-cloud-upload-alt"></i> Stonex Workflow Integration</h2>
-            <p>Export from X120GO scanner or Cube-3d → Upload here → Analyze with professional tools</p>
-            <div class="upload-area" id="uploadArea"><i class="fas fa-database"></i><div style="font-size: 1.2rem;">Drag & drop your point cloud file</div><div style="font-size: 0.85rem;">or click to browse</div>
-            <input type="file" id="fileInput" accept=".las,.laz,.ply,.e57,.xyz,.txt,.cx3d"><div id="fileInfo" style="margin: 15px 0;"></div>
-            <button class="upload-btn" id="uploadBtn" disabled><i class="fas fa-exchange-alt"></i> CONVERT & VIEW</button></div>
-            <div class="status" id="status"></div>
-            <div style="text-align: center; margin-top: 20px; font-size: 0.8rem;"><i class="fas fa-shield-alt"></i> Max 50MB | Secure | Cloud Storage Available</div>
-        </div></div>
-
-        <div id="features"><h2 style="font-family: 'Playfair Display', serif; font-size: 2rem; margin: 40px 0 20px; text-align: center;">Professional Features</h2>
-        <div class="features-grid">
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-cube"></i></div><h3>Volume Calculation</h3><p>Advanced volume calculation with cut/fill analysis</p></div>
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-simple"></i></div><h3>Point Cloud Classification</h3><p>Automatic classification by height, intensity, ground detection</p></div>
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-image"></i></div><h3>Orthophoto Generation</h3><p>Generate orthophotos and contour lines from point clouds</p></div>
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-line"></i></div><h3>Cross Sections & Profiles</h3><p>Generate cross sections, profiles, and contour lines</p></div>
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-cloud-upload-alt"></i></div><h3>Cloud Storage</h3><p>75GB free cloud storage. Access anytime, anywhere</p></div>
-            <div class="feature-card"><div class="feature-icon"><i class="fas fa-share-alt"></i></div><h3>Easy Sharing</h3><p>Share your projects with clients via simple links</p></div>
-        </div></div>
-
-        <div id="profile-section"><div class="profile-section"><div class="profile-header"><div class="profile-avatar"><i class="fas fa-user-graduate"></i></div>
-        <div class="profile-info"><h3>Ghulam Abbas Zafari</h3><div class="title">Geoinformatics Engineer | MSc Politecnico di Milano</div>
-        <p>Specializing in GIS, remote sensing, and machine learning for environmental monitoring. Former Cadastral Survey Engineer with 4+ years field experience.</p>
-        <div><span class="skill-tag">ArcGIS Pro</span><span class="skill-tag">QGIS</span><span class="skill-tag">Python</span><span class="skill-tag">Google Earth Engine</span><span class="skill-tag">GNSS/RTK</span><span class="skill-tag">LiDAR</span><span class="skill-tag">Stonex X120GO</span><span class="skill-tag">Cube-3d</span></div></div></div>
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;"><p><i class="fas fa-graduation-cap" style="color: var(--primary-red);"></i> <strong>MSc Thesis:</strong> "Land Cover Dynamics and Transitions in Italy: Multi-Temporal Analysis with Global Datasets" (2025)</p>
-        <p><i class="fas fa-briefcase"></i> <strong>Experience:</strong> Cadastral Survey Engineer (2018-2021) | High-precision RTK surveys, GNSS, Total Stations</p>
-        <p><i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com | <i class="fas fa-map-marker-alt"></i> Milan, Italy | <i class="fas fa-phone"></i> +39 379 138 7487</p></div></div></div>
+        <div id="ribbon-home" class="ribbon-group">
+            <div class="ribbon-item" onclick="openImportModal()"><i class="fas fa-file-import"></i><span>Import</span></div>
+            <div class="ribbon-item" onclick="openExportModal()"><i class="fas fa-file-export"></i><span>Export</span></div>
+            <div class="ribbon-item"><i class="fas fa-layer-group"></i><span>Consolidate</span></div>
+            <div class="ribbon-item"><i class="fas fa-link"></i><span>Join</span></div>
+            <div class="ribbon-item"><i class="fas fa-copy"></i><span>Clone</span></div>
+            <div class="ribbon-item"><i class="fas fa-trash"></i><span>Remove</span></div>
+            <div class="ribbon-item" id="propertiesRibbon"><i class="fas fa-info-circle"></i><span>Properties</span></div>
+            <div class="ribbon-item"><i class="fas fa-palette"></i><span>Colorize</span></div>
+        </div>
+        <div id="ribbon-pointclouds" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-cloud-upload-alt"></i><span>Load</span></div>
+            <div class="ribbon-item"><i class="fas fa-filter"></i><span>Filter</span></div>
+            <div class="ribbon-item"><i class="fas fa-chart-line"></i><span>Density</span></div>
+        </div>
+        <div id="ribbon-editing" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-cut"></i><span>Clip</span></div>
+            <div class="ribbon-item"><i class="fas fa-eraser"></i><span>Clean</span></div>
+        </div>
+        <div id="ribbon-register" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-crosshairs"></i><span>Align</span></div>
+            <div class="ribbon-item"><i class="fas fa-map-marker-alt"></i><span>GCPs</span></div>
+        </div>
+        <div id="ribbon-alignments" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-chart-line"></i><span>Profile</span></div>
+            <div class="ribbon-item"><i class="fas fa-waveform"></i><span>Section</span></div>
+        </div>
+        <div id="ribbon-modeling" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-cube"></i><span>Mesh</span></div>
+            <div class="ribbon-item"><i class="fas fa-chart-bar"></i><span>Volume</span></div>
+        </div>
+        <div id="ribbon-imagery" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-image"></i><span>Orthophoto</span></div>
+        </div>
+        <div id="ribbon-geotags" class="ribbon-group hidden">
+            <div class="ribbon-item"><i class="fas fa-tag"></i><span>Add Tag</span></div>
+        </div>
+        <div id="ribbon-cad" class="ribbon-group hidden">
+            <div class="ribbon-item" onclick="activateDrawingTool('line')"><i class="fas fa-draw-polygon"></i><span>Line</span></div>
+            <div class="ribbon-item" onclick="activateDrawingTool('circle')"><i class="fas fa-circle"></i><span>Circle</span></div>
+            <div class="ribbon-item" onclick="activateDrawingTool('rectangle')"><i class="fas fa-square"></i><span>Rectangle</span></div>
+            <div class="ribbon-item" onclick="clearAllDrawings()"><i class="fas fa-trash"></i><span>Clear</span></div>
+            <div class="ribbon-item" onclick="saveDrawings()"><i class="fas fa-save"></i><span>Save</span></div>
+        </div>
     </div>
 
-    <footer class="footer"><div class="container"><div class="footer-content"><div><h4>PCS-View</h4><p>Professional point cloud platform. Compatible with Stonex X120GO scanner and Cube-3d.</p></div>
-    <div><h4>Professional Tools</h4><ul><li>Volume Calculation</li><li>Point Cloud Classification</li><li>Orthophoto Generation</li><li>Cut & Fill Analysis</li><li>Cross Sections</li></ul></div>
-    <div><h4>Cloud Features</h4><ul><li>75GB Free Storage</li><li>Project Dashboard</li><li>Easy Sharing</li><li>Access Anywhere</li></ul></div>
-    <div><h4>Contact</h4><ul><li><i class="fas fa-envelope"></i> ghalambabas.zafari@gmail.com</li><li><i class="fas fa-phone"></i> +39 379 138 7487</li><li><i class="fas fa-map-marker-alt"></i> Milan, Italy</li></ul></div></div>
-    <div class="footer-bottom"><p>© 2026 PCS-View | Professional Point Cloud Platform | Built with FastAPI + Three.js</p></div></div></footer>
+    <div class="top-toolbar" id="mainToolbar">
+        <div class="toolbar-btn" onclick="openImportModal()"><i class="fas fa-file-import"></i> Import</div>
+        <div class="toolbar-btn" onclick="openExportModal()"><i class="fas fa-file-export"></i> Export</div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-btn" id="propertiesBtn"><i class="fas fa-info-circle"></i> Properties</div>
+        <div class="toolbar-btn" id="volumeBtn"><i class="fas fa-cube"></i> Volume</div>
+        <div class="toolbar-btn" id="classifyBtn"><i class="fas fa-chart-simple"></i> Classify</div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-btn" id="orthoBtn"><i class="fas fa-image"></i> Orthophoto</div>
+        <div class="toolbar-btn" id="resetViewBtn"><i class="fas fa-sync-alt"></i> Reset View</div>
+    </div>
 
-    <script>
-        const uploadArea = document.getElementById('uploadArea'), fileInput = document.getElementById('fileInput'), uploadBtn = document.getElementById('uploadBtn'), statusDiv = document.getElementById('status'), fileInfoDiv = document.getElementById('fileInfo');
-        let selectedFile = null;
+    <!-- Drawing Tools Toolbar -->
+    <div class="drawing-toolbar">
+        <span style="font-size: 11px; color: var(--accent-gold);"><i class="fas fa-pencil-ruler"></i> Drawing Tools:</span>
+        <div class="toolbar-btn" onclick="activateDrawingTool('line')" id="toolLine"><i class="fas fa-draw-polygon"></i> Line</div>
+        <div class="toolbar-btn" onclick="activateDrawingTool('circle')" id="toolCircle"><i class="fas fa-circle"></i> Circle</div>
+        <div class="toolbar-btn" onclick="activateDrawingTool('rectangle')" id="toolRect"><i class="fas fa-square"></i> Rectangle</div>
+        <div class="toolbar-btn" onclick="activateDrawingTool('measure')" id="toolMeasure"><i class="fas fa-ruler"></i> Measure Distance</div>
+        <div class="toolbar-btn" onclick="clearAllDrawings()"><i class="fas fa-trash"></i> Clear All</div>
+        <div class="toolbar-btn" onclick="saveDrawings()"><i class="fas fa-save"></i> Save Drawings</div>
+    </div>
+
+    <div class="main-workspace">
+        <div class="left-panel">
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('pointclouds-list')"><span>📁 POINT CLOUDS</span><i class="fas fa-chevron-down"></i></div>
+            <div id="pointclouds-list" class="panel-content"><div id="pointCloudTree" class="pointcloud-tree"><div style="text-align:center;padding:20px;color:var(--text-muted);"><i class="fas fa-cloud-upload-alt"></i><br>No point clouds loaded<br>Click Import to begin</div></div></div></div>
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('properties-panel')"><span>📊 PROPERTIES</span><i class="fas fa-chevron-down"></i></div>
+            <div id="properties-panel" class="panel-content">
+                <div class="property-row"><span class="property-label">Total points:</span><span class="property-value" id="totalPoints">0</span></div>
+                <div class="property-row"><span class="property-label">File size:</span><span class="property-value" id="fileSize">0 MB</span></div>
+                <div class="property-row"><span class="property-label">Status:</span><span class="property-value" id="status">No cloud loaded</span></div>
+            </div></div>
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('coordinate-panel')"><span>📍 COORDINATES</span><i class="fas fa-chevron-down"></i></div>
+            <div id="coordinate-panel" class="panel-content">
+                <div class="property-row"><span class="property-label">X range:</span><span class="property-value" id="xRange">--</span></div>
+                <div class="property-row"><span class="property-label">Y range:</span><span class="property-value" id="yRange">--</span></div>
+                <div class="property-row"><span class="property-label">Z range:</span><span class="property-value" id="zRange">--</span></div>
+            </div></div>
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('drawing-panel')"><span>✏️ DRAWINGS</span><i class="fas fa-chevron-down"></i></div>
+            <div id="drawing-panel" class="panel-content">
+                <div id="drawingList" style="font-size: 11px; color: var(--text-secondary);">No drawings yet</div>
+                <div id="measureResultDisplay" class="measure-result-display"></div>
+            </div></div>
+        </div>
+
+        <div class="viewer-area">
+            <div id="canvas-container"></div>
+            <div class="viewer-controls">
+                <button class="viewer-btn" onclick="resetView()"><i class="fas fa-sync-alt"></i> Reset View</button>
+                <button class="viewer-btn" onclick="toggleGrid()"><i class="fas fa-th"></i> Toggle Grid</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('color-panel')"><span>🎨 COLOR MODE</span><i class="fas fa-chevron-down"></i></div>
+            <div id="color-panel" class="panel-content"><div class="color-mode-selector"><div class="color-mode-btn active" data-mode="rgb">RGB</div><div class="color-mode-btn" data-mode="elevation">Elevation</div><div class="color-mode-btn" data-mode="intensity">Intensity</div></div></div></div>
+            <div class="panel-section"><div class="panel-header" onclick="togglePanel('analysis-panel')"><span>📈 ANALYSIS</span><i class="fas fa-chevron-down"></i></div>
+            <div id="analysis-panel" class="panel-content">
+                <button class="toolbar-btn" style="width:100%;margin-bottom:6px;" onclick="calculateVolume()"><i class="fas fa-cube"></i> Calculate Volume</button>
+                <button class="toolbar-btn" style="width:100%;margin-bottom:6px;" onclick="classifyPoints()"><i class="fas fa-chart-simple"></i> Classify Points</button>
+                <button class="toolbar-btn" style="width:100%;margin-bottom:6px;" onclick="generateOrthophoto()"><i class="fas fa-image"></i> Generate Orthophoto</button>
+                <button class="toolbar-btn" style="width:100%;" onclick="showStatistics()"><i class="fas fa-chart-bar"></i> Point Statistics</button>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="status-bar"><div class="status-left"><span id="cameraPos">Camera: --</span><span id="statusMsg"><i class="fas fa-check-circle"></i> Ready</span></div><div><span id="activeTool">Tool: None</span></div></div>
+    
+    <div class="footer">
+        <div>© 2026 PCS-View | Professional Point Cloud Platform</div>
+        <div>Ghulam Abbas Zafari | MSc Geoinformatics Engineering | Politecnico di Milano</div>
+        <div><a href="mailto:ghalambabas.zafari@gmail.com">ghalambabas.zafari@gmail.com</a> | +39 379 138 7487</div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="statusMessage" class="status-message"></div>
+
+    <div id="importModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Import Point Cloud</h3><span class="modal-close" onclick="closeModal('importModal')">&times;</span></div>
+    <div class="modal-body"><div class="upload-area" id="uploadArea"><i class="fas fa-cloud-upload-alt"></i><div>Drag & drop or click to browse</div><div style="font-size:11px;margin-top:8px;">Supports: LAS, LAZ, PLY, E57, XYZ</div><input type="file" id="fileInput" accept=".las,.laz,.ply,.e57,.xyz" style="display:none;"></div><div id="fileInfo" style="margin-top:12px;font-size:12px;"></div></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('importModal')">Cancel</button><button class="btn btn-primary" id="uploadBtn" disabled>Import & Convert</button></div></div></div>
+
+    <div id="exportModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Export Point Cloud</h3><span class="modal-close" onclick="closeModal('exportModal')">&times;</span></div>
+    <div class="modal-body"><select id="exportFormat" class="form-control"><option value="csv">CSV (XYZ)</option><option value="txt">TXT (ASCII)</option></select></div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('exportModal')">Cancel</button><button class="btn btn-primary" id="exportBtn">Export</button></div></div></div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    
+    // Global variables
+    let scene, camera, renderer, controls, pointCloud = null;
+    let currentModelName = null;
+    let gridVisible = true;
+    let gridHelper = null;
+    let drawings = [];
+    let activeDrawingTool = null;
+    let drawingPoints = [];
+    let measurePoints = [];
+    let raycaster = new THREE.Raycaster();
+    let mouse = new THREE.Vector2();
+    
+    // ============================================
+    // THREE.JS INITIALIZATION
+    // ============================================
+    function initThreeJS() {
+        const container = document.getElementById('canvas-container');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e17);
+        scene.fog = new THREE.FogExp2(0x0a0e17, 0.0005);
+        
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+        camera.position.set(20, 15, 25);
+        
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+        
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.rotateSpeed = 1.0;
+        controls.zoomSpeed = 1.2;
+        controls.panSpeed = 0.8;
+        
+        gridHelper = new THREE.GridHelper(50, 20, 0x3d465e, 0x2a3246);
+        gridHelper.position.y = -2;
+        scene.add(gridHelper);
+        
+        const axesHelper = new THREE.AxesHelper(10);
+        axesHelper.material.transparent = true;
+        axesHelper.material.opacity = 0.2;
+        scene.add(axesHelper);
+        
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        
+        // Add click event for drawing
+        renderer.domElement.addEventListener('click', onCanvasClick);
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+            if (renderer && scene && camera) renderer.render(scene, camera);
+        }
+        animate();
+        
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth, h = container.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
+        
+        setInterval(() => {
+            if (camera) document.getElementById('cameraPos').innerHTML = `Camera: ${camera.position.x.toFixed(1)}, ${camera.position.y.toFixed(1)}, ${camera.position.z.toFixed(1)}`;
+        }, 200);
+        
+        console.log('Three.js initialized');
+        showMessage('Platform ready. Click drawing tools to add annotations.', 'info');
+    }
+    
+    // ============================================
+    // CANVAS CLICK HANDLER FOR DRAWING
+    // ============================================
+    function onCanvasClick(event) {
+        if (!activeDrawingTool && !measurePoints.length) return;
+        
+        // Calculate mouse position in normalized coordinates
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        raycaster.setFromCamera(mouse, camera);
+        
+        // For drawing on the grid plane when no point cloud exists
+        let intersectionPoint = null;
+        
+        if (pointCloud) {
+            // Check intersection with point cloud
+            const intersects = raycaster.intersectObject(pointCloud);
+            if (intersects.length > 0) {
+                intersectionPoint = intersects[0].point;
+            }
+        }
+        
+        // If no point cloud intersection, use plane at y=0
+        if (!intersectionPoint) {
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            intersectionPoint = raycaster.intersectPlane(plane, new THREE.Vector3());
+        }
+        
+        if (intersectionPoint) {
+            if (activeDrawingTool === 'measure') {
+                // Measure distance mode
+                measurePoints.push(intersectionPoint.clone());
+                if (measurePoints.length === 2) {
+                    const distance = measurePoints[0].distanceTo(measurePoints[1]);
+                    document.getElementById('measureResultDisplay').innerHTML = `📏 Distance: ${distance.toFixed(3)} units`;
+                    showMessage(`Distance: ${distance.toFixed(3)} units`, 'success');
+                    
+                    // Draw line between measure points
+                    const points = [measurePoints[0], measurePoints[1]];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: 0xff4444, linewidth: 2 });
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                    drawings.push({ type: 'measure', object: line, points: points });
+                    updateDrawingList();
+                    
+                    measurePoints = [];
+                    activeDrawingTool = null;
+                    document.getElementById('activeTool').innerHTML = `Tool: None`;
+                    document.querySelectorAll('.drawing-toolbar .toolbar-btn').forEach(btn => btn.classList.remove('active'));
+                } else {
+                    // Add a sphere marker
+                    const sphereGeo = new THREE.SphereGeometry(0.1, 16, 16);
+                    const sphereMat = new THREE.MeshStandardMaterial({ color: 0xff4444 });
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.position.copy(intersectionPoint);
+                    scene.add(sphere);
+                    drawings.push({ type: 'marker', object: sphere, points: [intersectionPoint] });
+                    showMessage('First point selected. Click second point to measure distance.', 'info');
+                }
+            } 
+            else if (activeDrawingTool === 'line') {
+                drawingPoints.push(intersectionPoint.clone());
+                if (drawingPoints.length === 2) {
+                    const points = [drawingPoints[0], drawingPoints[1]];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: 0x44aaff, linewidth: 2 });
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                    drawings.push({ type: 'line', object: line, points: points });
+                    updateDrawingList();
+                    drawingPoints = [];
+                    showMessage('Line added', 'success');
+                    activeDrawingTool = null;
+                    document.getElementById('activeTool').innerHTML = `Tool: None`;
+                    document.querySelectorAll('.drawing-toolbar .toolbar-btn').forEach(btn => btn.classList.remove('active'));
+                } else {
+                    showMessage('Click second point to draw line', 'info');
+                    // Add temporary marker
+                    const sphereGeo = new THREE.SphereGeometry(0.08, 16, 16);
+                    const sphereMat = new THREE.MeshStandardMaterial({ color: 0x44aaff });
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.position.copy(intersectionPoint);
+                    scene.add(sphere);
+                    drawings.push({ type: 'point', object: sphere, points: [intersectionPoint] });
+                }
+            }
+            else if (activeDrawingTool === 'circle') {
+                drawingPoints.push(intersectionPoint.clone());
+                if (drawingPoints.length === 2) {
+                    const center = drawingPoints[0];
+                    const radius = center.distanceTo(drawingPoints[1]);
+                    
+                    // Create circle
+                    const points = [];
+                    const segments = 64;
+                    for (let i = 0; i <= segments; i++) {
+                        const angle = (i / segments) * Math.PI * 2;
+                        const x = center.x + radius * Math.cos(angle);
+                        const z = center.z + radius * Math.sin(angle);
+                        points.push(new THREE.Vector3(x, center.y, z));
+                    }
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: 0x44ff44 });
+                    const circle = new THREE.LineLoop(geometry, material);
+                    scene.add(circle);
+                    drawings.push({ type: 'circle', object: circle, points: [center, drawingPoints[1]] });
+                    updateDrawingList();
+                    drawingPoints = [];
+                    showMessage(`Circle added (radius: ${radius.toFixed(3)} units)`, 'success');
+                    activeDrawingTool = null;
+                    document.getElementById('activeTool').innerHTML = `Tool: None`;
+                    document.querySelectorAll('.drawing-toolbar .toolbar-btn').forEach(btn => btn.classList.remove('active'));
+                } else {
+                    showMessage('Click center, then click edge to define circle radius', 'info');
+                    const sphereGeo = new THREE.SphereGeometry(0.08, 16, 16);
+                    const sphereMat = new THREE.MeshStandardMaterial({ color: 0x44ff44 });
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.position.copy(intersectionPoint);
+                    scene.add(sphere);
+                    drawings.push({ type: 'point', object: sphere, points: [intersectionPoint] });
+                }
+            }
+            else if (activeDrawingTool === 'rectangle') {
+                drawingPoints.push(intersectionPoint.clone());
+                if (drawingPoints.length === 2) {
+                    const p1 = drawingPoints[0];
+                    const p2 = drawingPoints[1];
+                    const minX = Math.min(p1.x, p2.x);
+                    const maxX = Math.max(p1.x, p2.x);
+                    const minZ = Math.min(p1.z, p2.z);
+                    const maxZ = Math.max(p1.z, p2.z);
+                    const y = (p1.y + p2.y) / 2;
+                    
+                    const points = [
+                        new THREE.Vector3(minX, y, minZ),
+                        new THREE.Vector3(maxX, y, minZ),
+                        new THREE.Vector3(maxX, y, maxZ),
+                        new THREE.Vector3(minX, y, maxZ),
+                        new THREE.Vector3(minX, y, minZ)
+                    ];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: 0xffaa44 });
+                    const rect = new THREE.Line(geometry, material);
+                    scene.add(rect);
+                    drawings.push({ type: 'rectangle', object: rect, points: [p1, p2] });
+                    updateDrawingList();
+                    drawingPoints = [];
+                    showMessage('Rectangle added', 'success');
+                    activeDrawingTool = null;
+                    document.getElementById('activeTool').innerHTML = `Tool: None`;
+                    document.querySelectorAll('.drawing-toolbar .toolbar-btn').forEach(btn => btn.classList.remove('active'));
+                } else {
+                    showMessage('Click first corner, then click opposite corner', 'info');
+                    const sphereGeo = new THREE.SphereGeometry(0.08, 16, 16);
+                    const sphereMat = new THREE.MeshStandardMaterial({ color: 0xffaa44 });
+                    const sphere = new THREE.Mesh(sphereGeo, sphereMat);
+                    sphere.position.copy(intersectionPoint);
+                    scene.add(sphere);
+                    drawings.push({ type: 'point', object: sphere, points: [intersectionPoint] });
+                }
+            }
+        }
+    }
+    
+    function toggleGrid() {
+        gridVisible = !gridVisible;
+        gridHelper.visible = gridVisible;
+        showMessage(gridVisible ? 'Grid visible' : 'Grid hidden', 'info');
+    }
+    
+    function resetView() {
+        if (pointCloud) {
+            const geometry = pointCloud.geometry;
+            geometry.computeBoundingBox();
+            const bounds = geometry.boundingBox;
+            const center = bounds.getCenter(new THREE.Vector3());
+            const size = bounds.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const distance = maxDim * 1.5;
+            camera.position.set(distance, distance * 0.6, distance);
+            controls.target.set(center.x, center.y, center.z);
+            controls.update();
+            showMessage('View reset', 'success');
+        } else {
+            camera.position.set(20, 15, 25);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            showMessage('Camera reset', 'info');
+        }
+    }
+    
+    // ============================================
+    // DRAWING TOOLS
+    // ============================================
+    function activateDrawingTool(tool) {
+        activeDrawingTool = tool;
+        drawingPoints = [];
+        measurePoints = [];
+        document.getElementById('activeTool').innerHTML = `Tool: ${tool.toUpperCase()}`;
+        document.querySelectorAll('.drawing-toolbar .toolbar-btn').forEach(btn => btn.classList.remove('active'));
+        if (tool === 'line') document.getElementById('toolLine')?.classList.add('active');
+        if (tool === 'circle') document.getElementById('toolCircle')?.classList.add('active');
+        if (tool === 'rectangle') document.getElementById('toolRect')?.classList.add('active');
+        if (tool === 'measure') document.getElementById('toolMeasure')?.classList.add('active');
+        
+        let message = '';
+        if (tool === 'line') message = 'Line tool active. Click two points to draw a line.';
+        else if (tool === 'circle') message = 'Circle tool active. Click center, then click edge for radius.';
+        else if (tool === 'rectangle') message = 'Rectangle tool active. Click two opposite corners.';
+        else if (tool === 'measure') message = 'Measure mode active. Click two points to measure distance.';
+        showMessage(message, 'info');
+    }
+    
+    function clearAllDrawings() {
+        drawings.forEach(drawing => scene.remove(drawing.object));
+        drawings = [];
+        drawingPoints = [];
+        measurePoints = [];
+        updateDrawingList();
+        document.getElementById('measureResultDisplay').innerHTML = '';
+        showMessage('All drawings cleared', 'success');
+    }
+    
+    function updateDrawingList() {
+        const listDiv = document.getElementById('drawingList');
+        if (drawings.length === 0) {
+            listDiv.innerHTML = 'No drawings yet';
+        } else {
+            listDiv.innerHTML = drawings.map((d, i) => {
+                let icon = 'fa-draw-polygon';
+                if (d.type === 'circle') icon = 'fa-circle';
+                else if (d.type === 'rectangle') icon = 'fa-square';
+                else if (d.type === 'measure') icon = 'fa-ruler';
+                else if (d.type === 'point') icon = 'fa-circle-dot';
+                return `<div style="margin-bottom: 5px;"><i class="fas ${icon}"></i> ${d.type} #${i+1}</div>`;
+            }).join('');
+        }
+    }
+    
+    function saveDrawings() {
+        if (drawings.length === 0) {
+            showMessage('No drawings to save', 'error');
+            return;
+        }
+        const drawingData = drawings.map(d => ({ type: d.type, points: d.points }));
+        localStorage.setItem('pcs_drawings', JSON.stringify(drawingData));
+        showMessage(`${drawings.length} drawings saved`, 'success');
+    }
+    
+    function loadDrawings() {
+        const saved = localStorage.getItem('pcs_drawings');
+        if (saved) {
+            const drawingData = JSON.parse(saved);
+            showMessage(`Found ${drawingData.length} saved drawings`, 'info');
+        }
+    }
+    
+    // ============================================
+    // POINT CLOUD LOADING
+    // ============================================
+    async function loadPointCloud(modelName) {
+        if (!modelName) { showMessage('No model name', 'error'); return; }
+        currentModelName = modelName;
+        showMessage(`Loading ${modelName}...`, 'info');
+        document.getElementById('status').innerHTML = 'Loading...';
+        
+        if (pointCloud) scene.remove(pointCloud);
+        
+        try {
+            const response = await fetch(`/api/pointcloud/${modelName}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            if (!data.points || data.points.length === 0) throw new Error('No points data');
+            
+            console.log(`Received ${data.points.length} points`);
+            
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(data.points.length * 3);
+            for (let i = 0; i < data.points.length; i++) {
+                positions[i*3] = data.points[i][0];
+                positions[i*3+1] = data.points[i][1];
+                positions[i*3+2] = data.points[i][2];
+            }
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            let material;
+            if (data.colors && data.colors.length > 0) {
+                const colors = new Float32Array(data.colors.length * 3);
+                for (let i = 0; i < data.colors.length; i++) {
+                    colors[i*3] = data.colors[i][0];
+                    colors[i*3+1] = data.colors[i][1];
+                    colors[i*3+2] = data.colors[i][2];
+                }
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                material = new THREE.PointsMaterial({ size: 0.08, vertexColors: true });
+            } else {
+                material = new THREE.PointsMaterial({ color: 0x4a9eff, size: 0.08 });
+            }
+            
+            geometry.computeBoundingBox();
+            const bounds = geometry.boundingBox;
+            const center = bounds.getCenter(new THREE.Vector3());
+            
+            pointCloud = new THREE.Points(geometry, material);
+            pointCloud.position.sub(center);
+            scene.add(pointCloud);
+            
+            document.getElementById('totalPoints').innerHTML = data.count.toLocaleString();
+            document.getElementById('fileSize').innerHTML = (data.total_points / 1000).toFixed(1) + 'K';
+            document.getElementById('status').innerHTML = 'Loaded';
+            
+            if (bounds) {
+                document.getElementById('xRange').innerHTML = `${bounds.min.x.toFixed(1)} to ${bounds.max.x.toFixed(1)}`;
+                document.getElementById('yRange').innerHTML = `${bounds.min.y.toFixed(1)} to ${bounds.max.y.toFixed(1)}`;
+                document.getElementById('zRange').innerHTML = `${bounds.min.z.toFixed(1)} to ${bounds.max.z.toFixed(1)}`;
+            }
+            
+            updatePointCloudTree(modelName);
+            showMessage(`Loaded ${data.count.toLocaleString()} points`, 'success');
+            document.getElementById('statusMsg').innerHTML = `<i class="fas fa-check-circle"></i> Loaded: ${modelName}`;
+            
+            const size = bounds.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const distance = maxDim * 1.5;
+            camera.position.set(distance, distance * 0.6, distance);
+            controls.target.set(center.x, center.y, center.z);
+            controls.update();
+            
+        } catch (error) {
+            console.error('Load error:', error);
+            showMessage(`Failed: ${error.message}`, 'error');
+            document.getElementById('status').innerHTML = 'Failed to load';
+        }
+    }
+    
+    function updatePointCloudTree(modelName) {
+        const tree = document.getElementById('pointCloudTree');
+        tree.innerHTML = `<div class="tree-item active" onclick="loadPointCloud('${modelName}')"><i class="fas fa-cube"></i><span class="name">${modelName}</span></div>`;
+    }
+    
+    // ============================================
+    // UPLOAD & IMPORT
+    // ============================================
+    function openImportModal() { 
+        document.getElementById('importModal').classList.add('active');
+        document.getElementById('fileInfo').innerHTML = '';
+        document.getElementById('uploadBtn').disabled = true;
+        if (fileInput) fileInput.value = '';
+        selectedFile = null;
+    }
+    function openExportModal() { document.getElementById('exportModal').classList.add('active'); }
+    function closeModal(modalId) { document.getElementById(modalId).classList.remove('active'); }
+    
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    let selectedFile = null;
+    
+    if (uploadArea) {
         uploadArea.addEventListener('click', () => fileInput.click());
-        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.background = 'rgba(255,255,255,0.2)'; });
-        uploadArea.addEventListener('dragleave', () => { uploadArea.style.background = 'rgba(255,255,255,0.1)'; });
-        uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.style.background = 'rgba(255,255,255,0.1)'; if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
-        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFile(e.target.files[0]); });
-        function handleFile(file) { const ext = file.name.split('.').pop().toLowerCase(); const allowed = ['las', 'laz', 'ply', 'e57', 'xyz', 'txt', 'cx3d']; if (!allowed.includes(ext)) { showStatus('error', '❌ Unsupported format'); selectedFile = null; uploadBtn.disabled = true; fileInfoDiv.innerHTML = ''; return; }
-        selectedFile = file; uploadBtn.disabled = false; const sizeMB = (file.size / (1024 * 1024)).toFixed(2); fileInfoDiv.innerHTML = `<div class="file-info"><i class="fas fa-check-circle" style="color: #44ff44;"></i> ${file.name} (${sizeMB} MB)</div>`; showStatus('info', '✅ File ready'); }
-        uploadBtn.addEventListener('click', async () => { if (!selectedFile) return; uploadBtn.disabled = true; uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CONVERTING...'; showStatus('info', 'Converting...'); const formData = new FormData(); formData.append('file', selectedFile);
-        try { const response = await fetch('/api/upload', { method: 'POST', body: formData }); const data = await response.json(); if (response.ok && data.success) { showStatus('success', '✅ Conversion complete! Redirecting...'); setTimeout(() => { window.location.href = data.viewer_url; }, 1000); } else throw new Error(data.detail || 'Conversion failed'); }
-        catch (error) { showStatus('error', `❌ Error: ${error.message}`); uploadBtn.disabled = false; uploadBtn.innerHTML = '<i class="fas fa-exchange-alt"></i> CONVERT & VIEW'; } });
-        function showStatus(type, message) { statusDiv.className = `status ${type}`; statusDiv.innerHTML = message; }
-    </script>
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+        uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFileSelect(e.target.files[0]); });
+    }
+    
+    function handleFileSelect(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const allowed = ['las', 'laz', 'ply', 'e57', 'xyz'];
+        if (!allowed.includes(ext)) { showMessage(`Unsupported: ${ext}`, 'error'); return; }
+        selectedFile = file;
+        uploadBtn.disabled = false;
+        document.getElementById('fileInfo').innerHTML = `<i class="fas fa-check-circle" style="color:#3fb950;"></i> ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+        showMessage(`Selected: ${file.name}`, 'success');
+    }
+    
+    uploadBtn?.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Converting...';
+        showProgress(true);
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        try {
+            const response = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showMessage('Import successful! Loading point cloud...', 'success');
+                closeModal('importModal');
+                selectedFile = null;
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = 'Import & Convert';
+                document.getElementById('fileInfo').innerHTML = '';
+                if (fileInput) fileInput.value = '';
+                await loadPointCloud(data.model_name);
+            } else { 
+                throw new Error(data.detail || 'Import failed'); 
+            }
+        } catch (error) { 
+            showMessage(error.message, 'error'); 
+            uploadBtn.disabled = false; 
+            uploadBtn.innerHTML = 'Import & Convert';
+        }
+        finally { showProgress(false); }
+    });
+    
+    // ============================================
+    // EXPORT
+    // ============================================
+    document.getElementById('exportBtn')?.addEventListener('click', async () => {
+        if (!currentModelName) { showMessage('No point cloud loaded. Please import a file first.', 'error'); closeModal('exportModal'); return; }
+        const format = document.getElementById('exportFormat').value;
+        try {
+            const response = await fetch(`/api/export/${currentModelName}/${format}`);
+            if (!response.ok) throw new Error('Export failed');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentModelName.replace('.ply', `.${format}`)}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showMessage(`Exported as ${format.toUpperCase()}`, 'success');
+            closeModal('exportModal');
+        } catch (error) { showMessage(error.message, 'error'); }
+    });
+    
+    // ============================================
+    // ANALYSIS FUNCTIONS
+    // ============================================
+    async function calculateVolume() {
+        if (!currentModelName) { showMessage('No point cloud loaded. Please import a file first.', 'error'); return; }
+        showMessage('Calculating volume...', 'info');
+        try {
+            const response = await fetch(`/api/volume/${currentModelName}`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success) showMessage(`Volume: ${data.volume_cubic_meters} m³`, 'success');
+            else showMessage('Volume calculation failed', 'error');
+        } catch (error) { showMessage('Error', 'error'); }
+    }
+    
+    async function classifyPoints() {
+        if (!currentModelName) { showMessage('No point cloud loaded. Please import a file first.', 'error'); return; }
+        showMessage('Classifying points...', 'info');
+        try {
+            const response = await fetch(`/api/classify/height/${currentModelName}`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success) showMessage(`Classification complete! ${data.total_points} points`, 'success');
+            else showMessage('Classification failed', 'error');
+        } catch (error) { showMessage('Error', 'error'); }
+    }
+    
+    async function generateOrthophoto() {
+        if (!currentModelName) { showMessage('No point cloud loaded. Please import a file first.', 'error'); return; }
+        showMessage('Generating orthophoto...', 'info');
+        try {
+            const response = await fetch(`/api/orthophoto/generate/${currentModelName}?resolution=0.1`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success && data.orthophoto_url) { showMessage('Orthophoto generated!', 'success'); window.open(data.orthophoto_url, '_blank'); }
+            else showMessage('Orthophoto failed', 'error');
+        } catch (error) { showMessage('Error', 'error'); }
+    }
+    
+    async function showStatistics() {
+        if (!currentModelName) { showMessage('No point cloud loaded', 'error'); return; }
+        showMessage('Fetching statistics...', 'info');
+        try {
+            const response = await fetch(`/api/info/${currentModelName}`);
+            const data = await response.json();
+            document.getElementById('totalPoints').innerHTML = (data.point_count || 0).toLocaleString();
+            showMessage(`Statistics: ${data.point_count?.toLocaleString()} points, ${data.file_size_mb} MB`, 'success');
+        } catch (error) { showMessage('Failed to fetch statistics', 'error'); }
+    }
+    
+    // ============================================
+    // UI HELPERS
+    // ============================================
+    function showMessage(msg, type) {
+        const statusSpan = document.getElementById('statusMsg');
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        statusSpan.innerHTML = `<i class="fas ${icons[type]}"></i> ${msg}`;
+        const floatingMsg = document.getElementById('statusMessage');
+        floatingMsg.innerHTML = `<i class="fas ${icons[type]}"></i> ${msg}`;
+        floatingMsg.style.display = 'block';
+        setTimeout(() => { floatingMsg.style.display = 'none'; }, 3000);
+    }
+    
+    function showProgress(show) { document.getElementById('progressBar').style.display = show ? 'block' : 'none'; }
+    function togglePanel(panelId) { document.getElementById(panelId).classList.toggle('hidden'); }
+    function minimizeWindow() { window.location.href = '/'; }
+    function toggleFullscreen() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+    
+    // ============================================
+    // COLOR MODES
+    // ============================================
+    document.querySelectorAll('.color-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.color-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            showMessage(`Color mode: ${btn.innerText}`, 'info');
+            if (pointCloud && pointCloud.material) {
+                if (btn.innerText === 'RGB') pointCloud.material.vertexColors = true;
+                else { pointCloud.material.vertexColors = false; pointCloud.material.color.setHex(0x4a9eff); }
+                pointCloud.material.needsUpdate = true;
+            }
+        });
+    });
+    
+    // ============================================
+    // RIBBON NAVIGATION
+    // ============================================
+    document.querySelectorAll('.ribbon-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const ribbonId = tab.dataset.ribbon;
+            document.querySelectorAll('.ribbon-group').forEach(g => g.classList.add('hidden'));
+            const targetGroup = document.getElementById(`ribbon-${ribbonId}`);
+            if (targetGroup) targetGroup.classList.remove('hidden');
+        });
+    });
+    
+    // ============================================
+    // BUTTON EVENT LISTENERS
+    // ============================================
+    document.getElementById('propertiesBtn')?.addEventListener('click', async () => {
+        if (!currentModelName) { showMessage('No point cloud loaded. Please import a file first.', 'error'); return; }
+        showMessage('Fetching properties...', 'info');
+        try {
+            const response = await fetch(`/api/info/${currentModelName}`);
+            const data = await response.json();
+            document.getElementById('totalPoints').innerHTML = (data.point_count || 0).toLocaleString();
+            document.getElementById('fileSize').innerHTML = (data.file_size_mb || 0).toFixed(2) + ' MB';
+            if (data.bounds) {
+                document.getElementById('xRange').innerHTML = `${data.bounds.min[0]?.toFixed(1)} to ${data.bounds.max[0]?.toFixed(1)}`;
+                document.getElementById('yRange').innerHTML = `${data.bounds.min[1]?.toFixed(1)} to ${data.bounds.max[1]?.toFixed(1)}`;
+                document.getElementById('zRange').innerHTML = `${data.bounds.min[2]?.toFixed(1)} to ${data.bounds.max[2]?.toFixed(1)}`;
+            }
+            showMessage('Properties updated', 'success');
+        } catch (error) { showMessage('Failed to fetch properties', 'error'); }
+    });
+    
+    document.getElementById('volumeBtn')?.addEventListener('click', calculateVolume);
+    document.getElementById('classifyBtn')?.addEventListener('click', classifyPoints);
+    document.getElementById('orthoBtn')?.addEventListener('click', generateOrthophoto);
+    document.getElementById('resetViewBtn')?.addEventListener('click', resetView);
+    
+    // ============================================
+    // EXPOSE GLOBALS FOR HTML BUTTONS
+    // ============================================
+    window.loadPointCloud = loadPointCloud;
+    window.resetView = resetView;
+    window.calculateVolume = calculateVolume;
+    window.classifyPoints = classifyPoints;
+    window.generateOrthophoto = generateOrthophoto;
+    window.showStatistics = showStatistics;
+    window.openImportModal = openImportModal;
+    window.openExportModal = openExportModal;
+    window.closeModal = closeModal;
+    window.togglePanel = togglePanel;
+    window.minimizeWindow = minimizeWindow;
+    window.toggleFullscreen = toggleFullscreen;
+    window.toggleGrid = toggleGrid;
+    window.activateDrawingTool = activateDrawingTool;
+    window.clearAllDrawings = clearAllDrawings;
+    window.saveDrawings = saveDrawings;
+    
+    // ============================================
+    // START APPLICATION
+    // ============================================
+    initThreeJS();
+    loadDrawings();
+</script>
 </body>
 </html>

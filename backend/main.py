@@ -358,3 +358,129 @@ async def list_projects():
         return JSONResponse(content={"projects": projects, "total": len(projects)})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/pointcloud/{model_name}")
+async def get_pointcloud_json(model_name: str):
+    """Get point cloud data as JSON for Three.js visualization."""
+    import open3d as o3d
+    import numpy as np
+    from fastapi.responses import JSONResponse
+    
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+    
+    try:
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        points = np.asarray(pcd.points)
+        
+        # Limit points for performance
+        max_points = min(len(points), 50000)
+        step = len(points) // max_points if len(points) > max_points else 1
+        
+        # Sample points
+        sampled_points = points[::step][:max_points]
+        
+        # Get colors if available
+        colors = None
+        if pcd.has_colors():
+            colors = np.asarray(pcd.colors)[::step][:max_points]
+        
+        # Prepare response
+        response_data = {
+            "points": sampled_points.tolist(),
+            "colors": colors.tolist() if colors is not None else None,
+            "count": len(sampled_points),
+            "total_points": len(points)
+        }
+        
+        return JSONResponse(content=response_data)
+        
+    except Exception as e:
+        logger.error(f"Error loading point cloud: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/pointcloud/{model_name}")
+async def get_pointcloud_json(model_name: str):
+    """Get point cloud data as JSON for Three.js visualization."""
+    import open3d as o3d
+    import numpy as np
+    from fastapi.responses import JSONResponse
+    
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+    
+    try:
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        points = np.asarray(pcd.points)
+        
+        # Limit points for performance
+        max_points = min(len(points), 30000)
+        step = max(1, len(points) // max_points)
+        
+        # Sample points
+        sampled_points = points[::step][:max_points]
+        
+        # Get colors if available
+        colors = None
+        if pcd.has_colors():
+            colors = np.asarray(pcd.colors)[::step][:max_points]
+        
+        # Prepare response
+        response_data = {
+            "points": sampled_points.tolist(),
+            "colors": colors.tolist() if colors is not None else None,
+            "count": len(sampled_points),
+            "total_points": len(points)
+        }
+        
+        return JSONResponse(content=response_data)
+        
+    except Exception as e:
+        logger.error(f"Error loading point cloud: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/pointcloud/{model_name}")
+async def get_pointcloud_json(model_name: str):
+    """Get point cloud data as JSON for Three.js visualization."""
+    import open3d as o3d
+    import numpy as np
+    from fastapi.responses import JSONResponse
+    
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(status_code=404, detail="Model not found")
+    
+    try:
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        points = np.asarray(pcd.points)
+        
+        # Limit points for performance (30k points max)
+        max_points = min(len(points), 30000)
+        if len(points) > max_points:
+            step = len(points) // max_points
+            indices = range(0, len(points), step)
+            sampled_points = points[indices][:max_points]
+            if pcd.has_colors():
+                colors = np.asarray(pcd.colors)[indices][:max_points]
+            else:
+                colors = None
+        else:
+            sampled_points = points
+            colors = np.asarray(pcd.colors) if pcd.has_colors() else None
+        
+        # Prepare response
+        response_data = {
+            "points": sampled_points.tolist(),
+            "colors": colors.tolist() if colors is not None else None,
+            "count": len(sampled_points),
+            "total_points": len(points)
+        }
+        
+        logger.info(f"Returning {len(sampled_points)} points for {model_name}")
+        return JSONResponse(content=response_data)
+        
+    except Exception as e:
+        logger.error(f"Error loading point cloud: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
