@@ -15,82 +15,50 @@ class PointCloudClassifier:
             pcd = o3d.io.read_point_cloud(str(pcd_file))
             points = np.asarray(pcd.points)
             
+            if len(points) == 0:
+                return {"success": False, "error": "No points in point cloud"}
+            
             if height_thresholds is None:
-                height_thresholds = [-2, 0, 2, 5, 10]
+                # Calculate percentiles for adaptive thresholds
+                z_values = points[:, 2]
+                height_thresholds = [
+                    np.percentile(z_values, 10),
+                    np.percentile(z_values, 30),
+                    np.percentile(z_values, 60),
+                    np.percentile(z_values, 85)
+                ]
             
-            z_values = points[:, 2]
-            min_z, max_z = z_values.min(), z_values.max()
+            classifications = {
+                "low_vegetation": 0,
+                "medium_vegetation": 0,
+                "high_vegetation": 0,
+                "building": 0,
+                "other": 0
+            }
             
-            classifications = {}
-            colors = []
-            
-            for i, point in enumerate(points):
+            for point in points:
                 z = point[2]
                 if z < height_thresholds[1]:
-                    classification = "low_vegetation"
-                    color = [0, 255, 0]  # Green
+                    classifications["low_vegetation"] += 1
                 elif z < height_thresholds[2]:
-                    classification = "medium_vegetation"
-                    color = [0, 200, 0]
+                    classifications["medium_vegetation"] += 1
                 elif z < height_thresholds[3]:
-                    classification = "high_vegetation"
-                    color = [0, 150, 0]
-                elif z < height_thresholds[4]:
-                    classification = "building"
-                    color = [255, 0, 0]  # Red
+                    classifications["high_vegetation"] += 1
                 else:
-                    classification = "other"
-                    color = [255, 255, 0]  # Yellow
-                
-                classifications[i] = classification
-                colors.append(color)
+                    classifications["building"] += 1
             
             return {
                 "success": True,
                 "total_points": len(points),
-                "classifications": {
-                    "low_vegetation": sum(1 for c in classifications.values() if c == "low_vegetation"),
-                    "medium_vegetation": sum(1 for c in classifications.values() if c == "medium_vegetation"),
-                    "high_vegetation": sum(1 for c in classifications.values() if c == "high_vegetation"),
-                    "building": sum(1 for c in classifications.values() if c == "building"),
-                    "other": sum(1 for c in classifications.values() if c == "other")
-                },
-                "colored_points": colors[:1000]  # Sample for preview
+                "classifications": classifications,
+                "thresholds": {
+                    "low": round(height_thresholds[1], 2),
+                    "medium": round(height_thresholds[2], 2),
+                    "high": round(height_thresholds[3], 2)
+                }
             }
         except Exception as e:
             logger.error(f"Classification error: {str(e)}")
-            return {"success": False, "error": str(e)}
-    
-    @staticmethod
-    def classify_by_intensity(pcd_file: Path) -> dict:
-        """Classify points by intensity (if available)"""
-        try:
-            pcd = o3d.io.read_point_cloud(str(pcd_file))
-            points = np.asarray(pcd.points)
-            
-            # Check if intensity data exists (custom attribute)
-            has_intensity = hasattr(pcd, 'intensity')
-            
-            if not has_intensity:
-                return {
-                    "success": False,
-                    "error": "No intensity data available in point cloud"
-                }
-            
-            intensities = np.asarray(pcd.intensity)
-            classifications = {
-                "low_intensity": int(np.sum(intensities < 33)),
-                "medium_intensity": int(np.sum((intensities >= 33) & (intensities < 66))),
-                "high_intensity": int(np.sum(intensities >= 66))
-            }
-            
-            return {
-                "success": True,
-                "classifications": classifications,
-                "total_points": len(points)
-            }
-        except Exception as e:
-            logger.error(f"Intensity classification error: {str(e)}")
             return {"success": False, "error": str(e)}
     
     @staticmethod
@@ -101,16 +69,29 @@ class PointCloudClassifier:
             
             # Use statistical outlier removal for ground filtering
             cl, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
-            ground_points = pcd.select_by_index(ind)
-            non_ground_points = pcd.select_by_index(ind, invert=True)
             
-            return {
-                "success": True,
-                "ground_points": len(ground_points.points),
-                "non_ground_points": len(non_ground_points.points),
-                "total_points": len(pcd.points),
-                "ground_percentage": round(len(ground_points.points) / len(pcd.points) * 100, 2)
-            }
+            # Simple ground estimation: points below 2m from lowest point
+            points = np.asarray(pcd.points)
+            if len(points) > 0:
+                min_z = points[:, 2].min()
+                ground_threshold = min_z + 2.0
+                
+                ground_indices = points[:, 2] <= ground_threshold
+                ground_points = np.sum(ground_indices)
+                non_ground_points = len(points) - ground_points
+                
+                return {
+                    "success": True,
+                    "ground_points": int(ground_points),
+                    "non_ground_points": int(non_ground_points),
+                    "total_points": len(points),
+                    "ground_percentage": round(ground_points / len(points) * 100, 2) if len(points) > 0 else 0,
+                    "ground_threshold_m": round(ground_threshold, 2),
+                    "min_elevation_m": round(min_z, 2)
+                }
+            else:
+                return {"success": False, "error": "No points to classify"}
+                
         except Exception as e:
             logger.error(f"Ground classification error: {str(e)}")
             return {"success": False, "error": str(e)}
