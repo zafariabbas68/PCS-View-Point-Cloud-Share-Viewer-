@@ -33,3 +33,10 @@ electron/dist/
 electron/node_modules/
 *.dmg
 *.zip
+
+# Electron build files - too large for GitHub
+electron/dist/
+electron/node_modules/
+*.dmg
+*.zip
+*.app
