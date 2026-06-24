@@ -1,4 +1,3 @@
-
 # 🌍 PCS-View | Professional Point Cloud Platform
 
 [![Deploy on Render](https://img.shields.io/badge/Deploy%20on-Render-blue?logo=render)](https://pcs-view.onrender.com)
@@ -7,7 +6,7 @@
 [![Three.js](https://img.shields.io/badge/Three.js-r128-blue?logo=three.js)](https://threejs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-> **Stonex Compatible** | Convert, Visualize & Share 3D Point Clouds Instantly
+> **Professional Point Cloud Platform** | Convert, Visualize & Share 3D Point Clouds Instantly
 
 **Live Demo:** [https://pcs-view.onrender.com](https://pcs-view.onrender.com)
 
@@ -29,17 +28,17 @@
 
 ## 🎯 Overview
 
-**PCS-View** is a professional web-based platform for point cloud visualization and sharing. Built for geospatial engineers, surveyors, and Earth observation specialists, it bridges the gap between field data collection and client communication.
+**PCS-View** is a professional web-based platform for point cloud visualization, analysis, and sharing. Built for geospatial engineers, surveyors, and Earth observation specialists, it bridges the gap between field data collection and client communication.
 
 ### Why PCS-View?
 
 | Problem | Solution |
 |---------|----------|
 | Clients can't open LAS/E57 files | Browser-based viewer - no software needed |
-| Large files are hard to share | Instant conversion to web-friendly PLY |
-| Expensive cloud subscriptions | Self-hosted, lightweight, free |
-| No measurement tools | Built-in distance measurement |
-| CAD workflow integration | Export to TXT format |
+| Large files are hard to share | Instant conversion to web-friendly formats |
+| Expensive cloud subscriptions | Self-hosted, lightweight, and free |
+| No measurement tools | Built-in distance measurement and CAD tools |
+| CAD workflow integration | Export to multiple formats |
 
 ---
 
@@ -48,38 +47,63 @@
 ### 📤 **Upload & Convert**
 - Support for 7+ point cloud formats
 - Automatic conversion to web-optimized PLY
-- Handles up to 2 million points
+- Handles large point clouds efficiently
 - Real-time conversion status
 
 ### 🖥️ **3D Visualization**
 - GPU-accelerated rendering with Three.js
 - Smooth orbit controls (rotate, pan, zoom)
-- Colored point cloud support
+- Colored point cloud support (RGB, Elevation, Intensity, Classification)
 - Grid and axes helpers for orientation
 
 ### 📏 **Professional Tools**
-- **Distance Measurement** - Click two points, get exact distance
-- **Volume Calculation** - Stockpile/earthwork volume estimation
-- **Point Cloud Metadata** - View point count, bounds, file size
-- **Export to TXT** - ASCII format for CAD integration
+
+| Tool | Description |
+|------|-------------|
+| **Volume Calculation** | Convex hull, grid, and TIN methods |
+| **Cut & Fill Analysis** | Earthwork volume estimation |
+| **Point Classification** | Height-based, ground, vegetation detection |
+| **Orthophoto Generation** | Top-view image creation |
+| **Profile Generation** | Longitudinal and cross-section profiles |
+| **Superelevation** | Road design superelevation calculator |
+| **Alignment Creation** | Road alignment design (straight, curve) |
+| **Template Designer** | Road template creation (urban, rural, highway) |
+| **Esplanade Earthworks** | Elevation-based earthwork calculations |
+| **Terrain Analysis** | Slope, aspect, hillshade, contour analysis |
+| **Survey Calculation** | Polar, 3D distance, area calculations |
+| **Traverse Calculation** | Traverse survey computations |
+| **Filtering** | Range, statistical, and voxel filtering |
+| **Export** | CSV, TXT, LAS, PLY formats |
+
+### 🎨 **CAD Drawing Tools**
+- **Line Tool** - Draw straight lines
+- **Circle Tool** - Draw circles
+- **Rectangle Tool** - Draw rectangles
+- **Arc Tool** - Draw arcs
+- **Measure Tool** - Distance measurement between points
+- **Clear All** - Remove all CAD drawings
 
 ### 🎨 **User Experience**
+- Glassmorphism design with backdrop blur
 - Drag & drop file upload
-- Responsive layout (desktop/tablet)
+- Responsive layout (desktop/tablet/mobile)
+- Color-coded results (Cut=Red, Fill=Green)
+- Smooth animations and transitions
+- Status messages and progress indicators
 
 ---
 
 ## 📁 Supported Formats
 
-| Format | Extension | Stonex Product | Status |
-|--------|-----------|----------------|--------|
-| LAS | `.las` | X120GO Scanner, Cube-3d | ✅ Full |
+| Format | Extension | Source | Status |
+|--------|-----------|--------|--------|
+| LAS | `.las` | LiDAR data | ✅ Full |
 | LAZ | `.laz` | Compressed LiDAR | ✅ Full |
-| E57 | `.e57` | X120GO Scanner | ✅ Full |
-| PLY | `.ply` | X120GO Scanner | ✅ Full |
-| XYZ | `.xyz` | Cube-3d export | ✅ Full |
+| E57 | `.e57` | Laser scanners | ✅ Full |
+| PLY | `.ply` | Point cloud data | ✅ Full |
+| XYZ | `.xyz` | ASCII point cloud | ✅ Full |
 | TXT | `.txt` | ASCII point cloud | ✅ Full |
-| CX3D | `.cx3d` | Cube-a field software | ✅ Full |
+| CX3D | `.cx3d` | Field software | ✅ Full |
 
 ---
 
@@ -89,17 +113,19 @@
 | Technology | Purpose |
 |------------|---------|
 | **FastAPI** | High-performance REST API |
-| **Open3D** | Point cloud processing & conversion |
 | **Uvicorn** | ASGI server |
 | **NumPy** | Numerical operations |
+| **SciPy** | Scientific computing (Convex Hull) |
+| **Matplotlib** | Orthophoto generation |
+| **Laspy** | LAS/LAZ file processing |
 
 ### Frontend
 | Technology | Purpose |
 |------------|---------|
 | **Three.js** | 3D rendering engine |
-| **PLYLoader** | Point cloud file loading |
 | **OrbitControls** | Camera interaction |
-| **HTML5/CSS3** | Responsive UI |
+| **HTML5/CSS3** | Responsive UI with glassmorphism |
+| **Font Awesome** | Icons and visual elements |
 
 ### DevOps
 | Platform | Purpose |
@@ -129,7 +155,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # 3. Install dependencies
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 # 4. Run the application
 python run.py
@@ -155,13 +181,21 @@ docker run -p 8000:8000 pcs-view
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/` | Homepage (upload interface) |
-| `GET` | `/viewer/{model}` | 3D viewer page |
 | `POST` | `/api/upload` | Upload & convert point cloud |
+| `GET` | `/api/projects` | List available models |
+| `GET` | `/api/pointcloud/{model}` | Get point cloud data for viewer |
 | `GET` | `/api/info/{model}` | Get point cloud metadata |
-| `POST` | `/api/volume/{model}` | Calculate volume |
-| `GET` | `/api/export/{model}/txt` | Export to TXT |
-| `GET` | `/api/formats` | List supported formats |
-| `GET` | `/api/health` | Health check |
+| `POST` | `/api/volume/{model}` | Calculate volume (convex hull) |
+| `POST` | `/api/volume/advanced/{model}` | Advanced volume calculation |
+| `POST` | `/api/cutfill/{model}` | Cut & fill analysis |
+| `POST` | `/api/classify/height/{model}` | Height-based classification |
+| `POST` | `/api/orthophoto/generate/{model}` | Generate orthophoto |
+| `POST` | `/api/profile/longitudinal/{model}` | Generate longitudinal profile |
+| `POST` | `/api/profile/cross/{model}` | Generate cross section |
+| `POST` | `/api/earthworks/esplanade/{model}` | Esplanade earthwork calculation |
+| `POST` | `/api/road/superelevation` | Superelevation calculation |
+| `POST` | `/api/alignment/create` | Create road alignment |
+| `GET` | `/api/export/{model}/{format}` | Export point cloud |
 
 ### Example API Call
 
@@ -174,6 +208,12 @@ curl https://pcs-view.onrender.com/api/info/abc123.ply
 
 # Calculate volume
 curl -X POST https://pcs-view.onrender.com/api/volume/abc123.ply
+
+# Generate orthophoto
+curl -X POST "https://pcs-view.onrender.com/api/orthophoto/generate/abc123.ply?resolution=0.1"
+
+# Export as CSV
+curl https://pcs-view.onrender.com/api/export/abc123.ply/csv
 ```
 
 ---
@@ -185,24 +225,25 @@ PCS-View/
 │
 ├── backend/
 │   ├── __init__.py
-│   ├── main.py           # FastAPI application
-│   ├── converter.py      # Point cloud conversion logic
-│   ├── config.py         # Configuration settings
-│   └── requirements.txt  # Python dependencies
+│   ├── routes.py         # API routes and logic
+│   └── __pycache__/      # Compiled Python files
 │
 ├── frontend/
-│   ├── index.html        # Upload homepage
-│   └── viewer.html       # 3D viewer page
+│   ├── index.html        # Main application
+│   ├── css/              # Stylesheets
+│   ├── js/               # JavaScript modules
+│   └── viewer.html       # Viewer page (legacy)
 │
 ├── static/
-│   └── models/           # Converted PLY files
+│   ├── models/           # Converted PLY files
+│   └── orthophotos/      # Generated orthophotos
 │
 ├── uploads/              # Temporary upload storage
 │
 ├── Dockerfile            # Container configuration
 ├── render.yaml           # Render deployment config
 ├── run.py                # Launcher script
-├── requirements.txt      # Root dependencies
+├── requirements.txt      # Python dependencies
 └── README.md             # This file
 ```
 
@@ -219,10 +260,9 @@ PCS-View/
 3. Connect your GitHub repository
 4. Use these settings:
    - **Environment:** Python 3
-   - **Build Command:** `pip install -r backend/requirements.txt`
-   - **Start Command:** `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
-5. Add environment variable: `RENDER = true`
-6. Click "Create Web Service"
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `python run.py`
+5. Click "Create Web Service"
 
 ### Deploy on Railway
 
@@ -244,9 +284,9 @@ python run.py
 ## 🎮 Usage Guide
 
 ### 1. Upload a File
-- Drag & drop or click to select
+- Click "Import" or drag & drop
 - Supported: LAS, LAZ, E57, PLY, XYZ, TXT, CX3D
-- Max file size: 100MB (50MB on free tier)
+- Automatic conversion to PLY format
 
 ### 2. 3D Viewer Controls
 | Action | Control |
@@ -254,16 +294,31 @@ python run.py
 | Rotate | Left-click + drag |
 | Pan | Right-click + drag |
 | Zoom | Scroll wheel |
-| Reset view | Click "Reset Camera" |
+| Zoom In/Out | Toolbar buttons |
+| Reset view | Click "Reset" button |
 
 ### 3. Professional Tools
-| Tool | Function |
-|------|----------|
-| **Point Cloud Info** | Shows point count, bounds, file size |
-| **Calculate Volume** | Estimates stockpile volume in m³ |
-| **Export to TXT** | Downloads ASCII point cloud |
-| **Measure Distance** | Click two points to measure |
-| **Center View** | Resets camera position |
+| Tab | Tools |
+|-----|-------|
+| **Home** | Import, Export, Properties, Volume, Classify, Orthophoto |
+| **Clouds** | Load, Info, Filter |
+| **Survey** | Calculate, Traverse |
+| **Profiles** | Long Profile, Cross Section |
+| **Volumes** | Volume, Advanced, Cut & Fill |
+| **Road** | Alignment, Superelevation, Template |
+| **Earthworks** | Esplanade, Calculate, Terrain |
+| **CAD** | Line, Circle, Rectangle, Arc, Clear |
+
+### 4. CAD Drawing
+1. Click a CAD tool (Line, Circle, Rectangle, Arc)
+2. Click in the 3D view to place points
+3. Tool will complete automatically
+4. View drawings in the CAD panel
+
+### 5. Measurement
+1. Click the "Measure" button (turns red)
+2. Click two points in the 3D view
+3. Distance appears in the CAD panel
 
 ---
 
@@ -279,6 +334,7 @@ python run.py
 - **Cadastral Survey Engineer** (2018-2021)
   - Ministry of Urban Development and Land, Afghanistan
   - High-precision RTK surveys, GNSS, Total Stations
+  - Land registry and cadastral mapping
 
 ### Education
 - **MSc Geoinformatics Engineering** - Politecnico di Milano (2023-2025)
@@ -288,8 +344,8 @@ python run.py
 ### Technical Skills
 ```
 GIS:     ArcGIS Pro, QGIS, GRASS GIS, ENVI, SNAP, Google Earth Engine
-Dev:     Python, FastAPI, Three.js, JavaScript, Docker
-Survey:  GNSS, RTK, Total Stations, Drone Photogrammetry
+Dev:     Python, FastAPI, Three.js, JavaScript, Docker, HTML/CSS
+Survey:  GNSS, RTK, Total Stations, Drone Photogrammetry, LiDAR
 ```
 
 ---
@@ -326,7 +382,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 | Channel | Link |
 |---------|------|
 | **Live Demo** | [pcs-view.onrender.com](https://pcs-view.onrender.com) |
-| **GitHub** | [github.com/zafariabbas68](https://github.com/zafariabbas68/PCS-View-Point-Cloud-Share-Viewer-) |
+| **GitHub** | [github.com/zafariabbas68/PCS-View-Point-Cloud-Share-Viewer-](https://github.com/zafariabbas68/PCS-View-Point-Cloud-Share-Viewer-) |
 | **Email** | ghalambabas.zafari@gmail.com |
 | **Phone** | +39 379 138 7487 |
 
@@ -344,4 +400,3 @@ If this project helped you, please:
 **Built with ❤️ for Earth Observation and Geospatial Intelligence**
 
 *"From satellites to sovereignty — mapping our shared future"*
-
