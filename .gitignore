@@ -27,3 +27,9 @@ Thumbs.db
 test_cloud.ply
 sample.las
 colorful_cloud.ply
+
+# Electron build files - too large for GitHub
+electron/dist/
+electron/node_modules/
+*.dmg
+*.zip
