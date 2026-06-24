@@ -555,6 +555,6 @@ If this project helped you, please:
 
 ---
 
-**Built with ❤️ for Earth Observation and Geospatial Intelligence**
+**Built for Earth Observation and Geospatial Intelligence**
 
 *"From satellites to sovereignty — mapping our shared future"*
