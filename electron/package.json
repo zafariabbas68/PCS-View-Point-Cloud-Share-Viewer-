@@ -1,0 +1,69 @@
+{
+  "name": "pcs-view-desktop",
+  "version": "2.0.0",
+  "description": "Professional Point Cloud Platform - Desktop Edition",
+  "main": "main.js",
+  "author": "Ghulam Abbas Zafari <ghalambabas.zafari@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder --mac --win --linux"
+  },
+  "build": {
+    "appId": "com.pcsview.app",
+    "productName": "PCS-View",
+    "copyright": "Copyright © 2026 Ghulam Abbas Zafari",
+    "directories": {
+      "output": "dist"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"],
+      "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "fileAssociations": [
+      {
+        "ext": "las",
+        "name": "LAS Point Cloud",
+        "role": "Viewer"
+      },
+      {
+        "ext": "laz",
+        "name": "LAZ Point Cloud",
+        "role": "Viewer"
+      },
+      {
+        "ext": "ply",
+        "name": "PLY Point Cloud",
+        "role": "Viewer"
+      },
+      {
+        "ext": "e57",
+        "name": "E57 Point Cloud",
+        "role": "Viewer"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}
