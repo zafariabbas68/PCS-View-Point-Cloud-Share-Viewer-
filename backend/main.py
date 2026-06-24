@@ -1,486 +1,347 @@
-import os
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import uuid
 import shutil
+import json
 from datetime import datetime
 import numpy as np
 import logging
 
-from .config import UPLOAD_DIR, MODEL_DIR, ORTHOPHOTO_DIR, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
+from .config import UPLOAD_DIR, MODEL_DIR, ORTHOPHOTO_DIR, PROJECTS_DIR, ALLOWED_EXTENSIONS, MAX_FILE_SIZE
 from .converter import convert_point_cloud, calculate_volume, get_point_cloud_info
 from .classification import PointCloudClassifier
 from .orthophoto import OrthophotoGenerator
 from .volumes import VolumeCalculator
+from .alignments import AlignmentManager
+from .profiles import ProfileGenerator
+from .road_design import RoadDesign
+from .earthworks import Earthworks
+from .survey import SurveyCalculator
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="PCS-View API", description="Professional Point Cloud Platform - Stonex Compatible")
+app = FastAPI(title="PCS-View API", description="Professional Point Cloud Platform")
 
-# Ensure directories exist
+# Mount static
 static_dir = Path(__file__).parent.parent / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
-orthophoto_dir = static_dir / "orthophotos"
-orthophoto_dir.mkdir(parents=True, exist_ok=True)
-
-# Mount static files
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 
-# ==================== PAGE ROUTES ====================
+# ============================================
+# PAGE ROUTES
+# ============================================
 
 @app.get("/", response_class=HTMLResponse)
-async def upload_page():
-    """Serve the upload page."""
-    upload_html_path = Path(__file__).parent.parent / "frontend" / "index.html"
-    if upload_html_path.exists():
-        return upload_html_path.read_text()
-    return "<h1>PCS-View</h1><p>Frontend not found.</p>"
+async def home():
+    html_path = Path(__file__).parent.parent / "frontend" / "index.html"
+    if html_path.exists():
+        return html_path.read_text()
+    return "<h1>PCS-View</h1>"
 
 
-@app.get("/viewer/{model_name}", response_class=HTMLResponse)
-async def viewer_page(model_name: str):
-    """Serve the 3D viewer page for a specific model."""
-    viewer_html_path = Path(__file__).parent.parent / "frontend" / "viewer.html"
-    if viewer_html_path.exists():
-        html_content = viewer_html_path.read_text()
-        html_content = html_content.replace("{{MODEL_NAME}}", model_name)
-        return html_content
-    return f"<h1>Model: {model_name}</h1><p>Viewer not found</p>"
-
-
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard_page():
-    """Serve the cloud dashboard."""
-    dashboard_html_path = Path(__file__).parent.parent / "frontend" / "dashboard.html"
-    if dashboard_html_path.exists():
-        return dashboard_html_path.read_text()
-    return "<h1>Dashboard</h1><p>Dashboard not found.</p>"
-
-
-# ==================== CORE API ENDPOINTS ====================
+# ============================================
+# POINT CLOUD OPERATIONS
+# ============================================
 
 @app.post("/api/upload")
-async def upload_and_convert(file: UploadFile = File(...)):
-    """Upload and convert point cloud file."""
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    file.file.seek(0)
-
-    if file_size > MAX_FILE_SIZE:
-        raise HTTPException(status_code=400, detail=f"File too large. Max size: {MAX_FILE_SIZE // (1024 * 1024)} MB")
-
+async def upload_pointcloud(file: UploadFile = File(...)):
     file_ext = Path(file.filename).suffix.lower()
     if file_ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported file type. Supported: {', '.join(ALLOWED_EXTENSIONS)}"
-        )
+        raise HTTPException(400, f"Unsupported format")
 
     unique_id = str(uuid.uuid4())[:8]
-    temp_input_path = UPLOAD_DIR / f"{unique_id}{file_ext}"
-    output_filename = f"{unique_id}.ply"
-    output_path = MODEL_DIR / output_filename
+    temp_path = UPLOAD_DIR / f"{unique_id}{file_ext}"
+    output_path = MODEL_DIR / f"{unique_id}.ply"
 
     try:
-        with open(temp_input_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        with open(temp_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
 
-        conversion_result = convert_point_cloud(temp_input_path, output_path)
+        result = convert_point_cloud(temp_path, output_path)
+        if not result.get("success"):
+            raise HTTPException(500, result.get("error", "Conversion failed"))
 
-        if not conversion_result.get("success"):
-            raise HTTPException(status_code=500, detail=conversion_result.get("error", "Conversion failed"))
-
-        viewer_url = f"/viewer/{output_filename}"
-        return JSONResponse(content={
+        return JSONResponse({
             "success": True,
-            "viewer_url": viewer_url,
-            "model_name": output_filename,
-            "metadata": conversion_result,
-            "message": f"Successfully converted {file.filename}"
+            "model_name": f"{unique_id}.ply",
+            "metadata": result,
+            "viewer_url": f"/viewer/{unique_id}.ply"
         })
-
     except Exception as e:
-        logger.error(f"Upload error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
-
+        raise HTTPException(500, str(e))
     finally:
-        if temp_input_path.exists():
-            temp_input_path.unlink()
+        if temp_path.exists():
+            temp_path.unlink()
 
 
-# ==================== CLASSIFICATION ENDPOINTS ====================
-
-@app.post("/api/classify/height/{model_name}")
-async def classify_by_height(model_name: str):
-    """Classify point cloud by height/elevation"""
+@app.get("/api/pointcloud/{model_name}")
+async def get_pointcloud(model_name: str):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
+        raise HTTPException(404, "Model not found")
+
+    try:
+        pcd = o3d.io.read_point_cloud(str(ply_path))
+        points = np.asarray(pcd.points)
+        max_pts = min(len(points), 30000)
+
+        step = max(1, len(points) // max_pts)
+        sampled = points[::step][:max_pts]
+        colors = np.asarray(pcd.colors)[::step][:max_pts] if pcd.has_colors() else None
+
+        return JSONResponse({
+            "points": sampled.tolist(),
+            "colors": colors.tolist() if colors is not None else None,
+            "count": len(sampled),
+            "total_points": len(points)
+        })
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
+@app.get("/api/info/{model_name}")
+async def get_info(model_name: str):
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(404, "Model not found")
+    result = get_point_cloud_info(ply_path)
+    if "error" in result:
+        raise HTTPException(500, result["error"])
+    result["file_size_mb"] = round(ply_path.stat().st_size / (1024 * 1024), 2)
+    return JSONResponse(result)
+
+
+# ============================================
+# VOLUME OPERATIONS
+# ============================================
+
+@app.post("/api/volume/{model_name}")
+async def volume_calc(model_name: str):
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(404, "Model not found")
+    result = calculate_volume(ply_path)
+    return JSONResponse(result)
+
+
+@app.post("/api/volume/advanced/{model_name}")
+async def volume_advanced(model_name: str, base_elevation: float = None):
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(404, "Model not found")
+    result = VolumeCalculator.calculate_volume(ply_path, base_elevation)
+    return JSONResponse(result)
+
+
+@app.post("/api/cutfill/{model_name}")
+async def cutfill_analysis(model_name: str):
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(404, "Model not found")
+    result = VolumeCalculator.cut_fill_analysis(ply_path)
+    return JSONResponse(result)
+
+
+# ============================================
+# CLASSIFICATION
+# ============================================
+
+@app.post("/api/classify/height/{model_name}")
+async def classify_height(model_name: str):
+    ply_path = MODEL_DIR / model_name
+    if not ply_path.exists():
+        raise HTTPException(404, "Model not found")
     result = PointCloudClassifier.classify_by_height(ply_path)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Classification failed"))
-    return JSONResponse(content=result)
+    return JSONResponse(result)
 
 
 @app.post("/api/classify/ground/{model_name}")
 async def classify_ground(model_name: str):
-    """Classify ground vs non-ground points"""
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
+        raise HTTPException(404, "Model not found")
     result = PointCloudClassifier.ground_classification(ply_path)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Classification failed"))
-    return JSONResponse(content=result)
+    return JSONResponse(result)
 
 
-# ==================== ORTHOPHOTO ENDPOINTS ====================
+# ============================================
+# ORTHOPHOTO & CONTOURS
+# ============================================
 
 @app.post("/api/orthophoto/generate/{model_name}")
-async def generate_orthophoto(model_name: str, resolution: float = 0.1):
-    """Generate orthophoto from point cloud"""
+async def generate_ortho(model_name: str, resolution: float = 0.1):
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
+        raise HTTPException(404, "Model not found")
     result = OrthophotoGenerator.generate_orthophoto(ply_path, resolution)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Orthophoto generation failed"))
-    
-    if result.get("orthophoto_path"):
+    if result.get("success"):
         result["orthophoto_url"] = f"/static/orthophotos/{Path(result['orthophoto_path']).name}"
-    
-    return JSONResponse(content=result)
-
-
-@app.get("/api/orthophoto/{filename}")
-async def get_orthophoto(filename: str):
-    """Download orthophoto image"""
-    ortho_path = ORTHOPHOTO_DIR / filename
-    if not ortho_path.exists():
-        raise HTTPException(status_code=404, detail="Orthophoto not found")
-    return FileResponse(path=ortho_path, media_type="image/png")
+    return JSONResponse(result)
 
 
 @app.post("/api/contours/generate/{model_name}")
 async def generate_contours(model_name: str, interval: float = 1.0):
-    """Generate contour lines from point cloud"""
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
+        raise HTTPException(404, "Model not found")
     result = OrthophotoGenerator.generate_contour_lines(ply_path, interval)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Contour generation failed"))
-    return JSONResponse(content=result)
+    return JSONResponse(result)
 
 
-# ==================== VOLUME ENDPOINTS ====================
+# ============================================
+# ALIGNMENTS (NEW)
+# ============================================
 
-@app.post("/api/volume/advanced/{model_name}")
-async def calculate_advanced_volume(model_name: str, base_elevation: float = None):
-    """Advanced volume calculation"""
+@app.post("/api/alignment/create")
+async def create_alignment(data: dict):
+    points = data.get("points", [])
+    name = data.get("name", "alignment")
+    result = AlignmentManager.create_alignment(points, name)
+    return JSONResponse(result)
+
+
+@app.get("/api/alignment/export/{name}")
+async def export_alignment(name: str):
+    file_path = PROJECTS_DIR / f"{name}.json"
+    if not file_path.exists():
+        raise HTTPException(404, "Alignment not found")
+    return FileResponse(path=file_path, filename=f"{name}.json")
+
+
+# ============================================
+# PROFILES (NEW)
+# ============================================
+
+@app.post("/api/profile/longitudinal/{model_name}")
+async def longitudinal_profile(model_name: str):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
-    result = VolumeCalculator.calculate_volume(ply_path, base_elevation)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Volume calculation failed"))
-    return JSONResponse(content=result)
+        raise HTTPException(404, "Model not found")
+
+    pcd = o3d.io.read_point_cloud(str(ply_path))
+    points = np.asarray(pcd.points)
+    result = ProfileGenerator.generate_longitudinal_profile(points)
+    return JSONResponse(result)
 
 
-@app.post("/api/cutfill/{model_name}")
-async def cut_fill_analysis(model_name: str, design_model: str = None):
-    """Cut and fill analysis"""
+@app.post("/api/profile/cross/{model_name}")
+async def cross_profile(model_name: str, center_x: float, center_y: float, width: float = 20.0):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
-    design_path = MODEL_DIR / design_model if design_model else None
-    result = VolumeCalculator.cut_fill_analysis(ply_path, design_path)
-    if not result.get("success"):
-        raise HTTPException(status_code=500, detail=result.get("error", "Cut/fill analysis failed"))
-    return JSONResponse(content=result)
+        raise HTTPException(404, "Model not found")
+
+    pcd = o3d.io.read_point_cloud(str(ply_path))
+    points = np.asarray(pcd.points)
+    result = ProfileGenerator.generate_cross_section(points, [center_x, center_y], width)
+    return JSONResponse(result)
 
 
-# ==================== EXISTING ENDPOINTS ====================
+# ============================================
+# ROAD DESIGN (NEW)
+# ============================================
 
-@app.get("/api/info/{model_name}")
-async def get_pointcloud_metadata(model_name: str):
-    """Get metadata about a converted point cloud."""
+@app.post("/api/road/superelevation")
+async def road_superelevation(speed: float, radius: float):
+    result = RoadDesign.calculate_superelevation(speed, radius)
+    return JSONResponse(result)
+
+
+@app.post("/api/road/template")
+async def road_template(width: float, lanes: int, shoulder: float = 0.5):
+    result = RoadDesign.design_template(width, lanes, shoulder)
+    return JSONResponse(result)
+
+
+# ============================================
+# EARTHWORKS (NEW)
+# ============================================
+
+@app.post("/api/earthworks/esplanade/{model_name}")
+async def esplanade_volume(model_name: str, elevation: float):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
+        raise HTTPException(404, "Model not found")
 
-    result = get_point_cloud_info(ply_path)
-    if "error" in result:
-        raise HTTPException(status_code=500, detail=result["error"])
-
-    result["file_name"] = model_name
-    result["file_size_mb"] = round(ply_path.stat().st_size / (1024 * 1024), 2)
-    return JSONResponse(content=result)
+    pcd = o3d.io.read_point_cloud(str(ply_path))
+    points = np.asarray(pcd.points)
+    result = Earthworks.calculate_volume_by_esplanade(points, elevation)
+    return JSONResponse(result)
 
 
-@app.post("/api/volume/{model_name}")
-async def compute_volume(model_name: str):
-    """Calculate volume for stockpile applications."""
-    ply_path = MODEL_DIR / model_name
-    if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-
-    result = calculate_volume(ply_path)
-    if "error" in result:
-        raise HTTPException(status_code=500, detail=result["error"])
-    return JSONResponse(content=result)
-
+# ============================================
+# EXPORT
+# ============================================
 
 @app.get("/api/export/{model_name}/csv")
-async def export_to_csv(model_name: str):
-    """Export point cloud to CSV format."""
+async def export_csv(model_name: str):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail=f"Model not found")
+        raise HTTPException(404, "Model not found")
 
-    try:
-        import open3d as o3d
-        pcd = o3d.io.read_point_cloud(str(ply_path))
-        points = np.asarray(pcd.points)
+    pcd = o3d.io.read_point_cloud(str(ply_path))
+    points = np.asarray(pcd.points)[:5000]
+    lines = ["X,Y,Z"]
+    for p in points:
+        lines.append(f"{p[0]:.6f},{p[1]:.6f},{p[2]:.6f}")
 
-        max_points = min(len(points), 3000)
-        csv_lines = ["X,Y,Z"]
-        for i in range(max_points):
-            csv_lines.append(f"{points[i][0]:.6f},{points[i][1]:.6f},{points[i][2]:.6f}")
-
-        content = "\n".join(csv_lines)
-        return Response(
-            content=content,
-            media_type="text/csv",
-            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.csv')}"}
-        )
-    except Exception as e:
-        logger.error(f"CSV export error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+    return Response(
+        content="\n".join(lines),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.csv')}"}
+    )
 
 
 @app.get("/api/export/{model_name}/txt")
-async def export_to_txt(model_name: str):
-    """Export point cloud to TXT format."""
+async def export_txt(model_name: str):
+    import open3d as o3d
     ply_path = MODEL_DIR / model_name
     if not ply_path.exists():
-        raise HTTPException(status_code=404, detail=f"Model not found")
+        raise HTTPException(404, "Model not found")
 
-    try:
-        import open3d as o3d
-        pcd = o3d.io.read_point_cloud(str(ply_path))
-        points = np.asarray(pcd.points)
+    pcd = o3d.io.read_point_cloud(str(ply_path))
+    points = np.asarray(pcd.points)[:5000]
+    lines = [f"# PCS-View Export", f"# Points: {len(points)}", "# X Y Z"]
+    for p in points:
+        lines.append(f"{p[0]:.6f} {p[1]:.6f} {p[2]:.6f}")
 
-        max_points = min(len(points), 3000)
-        txt_lines = ["# PCS-View Exported Point Cloud", f"# Points: {max_points}", "# X Y Z"]
-        for i in range(max_points):
-            txt_lines.append(f"{points[i][0]:.6f} {points[i][1]:.6f} {points[i][2]:.6f}")
-
-        content = "\n".join(txt_lines)
-        return Response(
-            content=content,
-            media_type="text/plain",
-            headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.txt')}"}
-        )
-    except Exception as e:
-        logger.error(f"TXT export error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
+    return Response(
+        content="\n".join(lines),
+        media_type="text/plain",
+        headers={"Content-Disposition": f"attachment; filename={model_name.replace('.ply', '.txt')}"}
+    )
 
 
-@app.get("/api/formats")
-async def get_supported_formats():
-    """Return list of supported file formats."""
-    return {
-        "supported_formats": list(ALLOWED_EXTENSIONS),
-        "stonex_compatible": [".las", ".e57", ".ply", ".xyz", ".cx3d"],
-        "description": "Compatible with Stonex X120GO scanner and Cube-3d software"
-    }
-
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
-
-
-@app.get("/api/debug")
-async def debug_info():
-    """Debug endpoint."""
-    try:
-        models_dir = MODEL_DIR
-        files = []
-        if models_dir.exists():
-            for f in models_dir.iterdir():
-                if f.suffix == '.ply':
-                    files.append({"name": f.name, "size": f.stat().st_size})
-        
-        ortho_dir = ORTHOPHOTO_DIR
-        ortho_files = []
-        if ortho_dir.exists():
-            ortho_files = [f.name for f in ortho_dir.iterdir() if f.suffix == '.png']
-        
-        return {
-            "status": "ok",
-            "ply_files": files,
-            "orthophotos": ortho_files,
-            "count": len(files)
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
+# ============================================
+# PROJECTS
+# ============================================
 
 @app.get("/api/projects")
 async def list_projects():
-    """List all projects (point clouds)"""
-    try:
-        models_dir = MODEL_DIR
-        projects = []
-        if models_dir.exists():
-            for f in models_dir.iterdir():
-                if f.suffix == '.ply':
-                    projects.append({
-                        "id": f.stem,
-                        "name": f.name,
-                        "size_mb": round(f.stat().st_size / (1024 * 1024), 2),
-                        "created": datetime.fromtimestamp(f.stat().st_ctime).isoformat(),
-                        "url": f"/viewer/{f.name}"
-                    })
-        return JSONResponse(content={"projects": projects, "total": len(projects)})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    projects = []
+    for f in MODEL_DIR.glob("*.ply"):
+        projects.append({
+            "name": f.name,
+            "size_mb": round(f.stat().st_size / (1024 * 1024), 2),
+            "created": datetime.fromtimestamp(f.stat().st_ctime).isoformat()
+        })
+    return {"projects": projects, "total": len(projects)}
 
-@app.get("/api/pointcloud/{model_name}")
-async def get_pointcloud_json(model_name: str):
-    """Get point cloud data as JSON for Three.js visualization."""
-    import open3d as o3d
-    import numpy as np
-    from fastapi.responses import JSONResponse
-    
-    ply_path = MODEL_DIR / model_name
-    if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
-    try:
-        pcd = o3d.io.read_point_cloud(str(ply_path))
-        points = np.asarray(pcd.points)
-        
-        # Limit points for performance
-        max_points = min(len(points), 50000)
-        step = len(points) // max_points if len(points) > max_points else 1
-        
-        # Sample points
-        sampled_points = points[::step][:max_points]
-        
-        # Get colors if available
-        colors = None
-        if pcd.has_colors():
-            colors = np.asarray(pcd.colors)[::step][:max_points]
-        
-        # Prepare response
-        response_data = {
-            "points": sampled_points.tolist(),
-            "colors": colors.tolist() if colors is not None else None,
-            "count": len(sampled_points),
-            "total_points": len(points)
-        }
-        
-        return JSONResponse(content=response_data)
-        
-    except Exception as e:
-        logger.error(f"Error loading point cloud: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/pointcloud/{model_name}")
-async def get_pointcloud_json(model_name: str):
-    """Get point cloud data as JSON for Three.js visualization."""
-    import open3d as o3d
-    import numpy as np
-    from fastapi.responses import JSONResponse
-    
-    ply_path = MODEL_DIR / model_name
-    if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
-    try:
-        pcd = o3d.io.read_point_cloud(str(ply_path))
-        points = np.asarray(pcd.points)
-        
-        # Limit points for performance
-        max_points = min(len(points), 30000)
-        step = max(1, len(points) // max_points)
-        
-        # Sample points
-        sampled_points = points[::step][:max_points]
-        
-        # Get colors if available
-        colors = None
-        if pcd.has_colors():
-            colors = np.asarray(pcd.colors)[::step][:max_points]
-        
-        # Prepare response
-        response_data = {
-            "points": sampled_points.tolist(),
-            "colors": colors.tolist() if colors is not None else None,
-            "count": len(sampled_points),
-            "total_points": len(points)
-        }
-        
-        return JSONResponse(content=response_data)
-        
-    except Exception as e:
-        logger.error(f"Error loading point cloud: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/api/formats")
+async def get_formats():
+    return {"formats": list(ALLOWED_EXTENSIONS)}
 
-@app.get("/api/pointcloud/{model_name}")
-async def get_pointcloud_json(model_name: str):
-    """Get point cloud data as JSON for Three.js visualization."""
-    import open3d as o3d
-    import numpy as np
-    from fastapi.responses import JSONResponse
-    
-    ply_path = MODEL_DIR / model_name
-    if not ply_path.exists():
-        raise HTTPException(status_code=404, detail="Model not found")
-    
-    try:
-        pcd = o3d.io.read_point_cloud(str(ply_path))
-        points = np.asarray(pcd.points)
-        
-        # Limit points for performance (30k points max)
-        max_points = min(len(points), 30000)
-        if len(points) > max_points:
-            step = len(points) // max_points
-            indices = range(0, len(points), step)
-            sampled_points = points[indices][:max_points]
-            if pcd.has_colors():
-                colors = np.asarray(pcd.colors)[indices][:max_points]
-            else:
-                colors = None
-        else:
-            sampled_points = points
-            colors = np.asarray(pcd.colors) if pcd.has_colors() else None
-        
-        # Prepare response
-        response_data = {
-            "points": sampled_points.tolist(),
-            "colors": colors.tolist() if colors is not None else None,
-            "count": len(sampled_points),
-            "total_points": len(points)
-        }
-        
-        logger.info(f"Returning {len(sampled_points)} points for {model_name}")
-        return JSONResponse(content=response_data)
-        
-    except Exception as e:
-        logger.error(f"Error loading point cloud: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/health")
+async def health():
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
