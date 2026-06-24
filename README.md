@@ -1,9 +1,11 @@
+
 # 🌍 PCS-View | Professional Point Cloud Platform
 
 [![Deploy on Render](https://img.shields.io/badge/Deploy%20on-Render-blue?logo=render)](https://pcs-view.onrender.com)
 [![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Three.js](https://img.shields.io/badge/Three.js-r128-blue?logo=three.js)](https://threejs.org)
+[![Electron](https://img.shields.io/badge/Electron-30.0.0-blue?logo=electron)](https://electronjs.org)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 > **Professional Point Cloud Platform** | Convert, Visualize & Share 3D Point Clouds Instantly
@@ -14,10 +16,12 @@
 
 ## 📋 Table of Contents
 - [Overview](#overview)
+- [System Architecture](#system-architecture)
 - [Features](#features)
 - [Supported Formats](#supported-formats)
 - [Technology Stack](#technology-stack)
 - [Quick Start](#quick-start)
+- [Desktop Application](#desktop-application)
 - [API Endpoints](#api-endpoints)
 - [Project Structure](#project-structure)
 - [Deployment](#deployment)
@@ -39,6 +43,93 @@
 | Expensive cloud subscriptions | Self-hosted, lightweight, and free |
 | No measurement tools | Built-in distance measurement and CAD tools |
 | CAD workflow integration | Export to multiple formats |
+| Need desktop app for offline use | Electron-based native desktop application |
+
+---
+
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           PCS-View Architecture                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   ┌─────────────────┐         ┌─────────────────────────────────────────┐  │
+│   │   Client Side   │         │            Server Side                   │  │
+│   │                 │         │                                         │  │
+│   │  ┌───────────┐  │  HTTP   │  ┌───────────────────────────────────┐  │  │
+│   │  │  Browser  │◄─┼─────────┼──│          FastAPI Server           │  │  │
+│   │  │  (Web)    │  │  REST   │  │  (Python 3.12 / Uvicorn)          │  │  │
+│   │  └───────────┘  │  API    │  └───────────────────────────────────┘  │  │
+│   │                 │         │                   │                     │  │
+│   │  ┌───────────┐  │         │  ┌───────────────────────────────────┐  │  │
+│   │  │  Electron │  │  IPC    │  │          Backend Modules          │  │  │
+│   │  │  Desktop  │◄─┼─────────┼──│  ┌───────────┐  ┌───────────┐  │  │  │
+│   │  │  App      │  │         │  │  │ Volume    │  │ Profiles  │  │  │  │
+│   │  └───────────┘  │         │  │  │ Calc      │  │ Gen       │  │  │  │
+│   │                 │         │  │  └───────────┘  └───────────┘  │  │  │
+│   └─────────────────┘         │  │  ┌───────────┐  ┌───────────┐  │  │  │
+│                               │  │  │ Road      │  │ Earth     │  │  │  │
+│   ┌─────────────────┐         │  │  │ Design    │  │ Works     │  │  │  │
+│   │    Frontend      │         │  │  └───────────┘  └───────────┘  │  │  │
+│   │    Modules       │         │  │  ┌───────────┐  ┌───────────┐  │  │  │
+│   │                  │         │  │  │ CAD Tools │  │ Survey    │  │  │  │
+│   │  ┌────────────┐  │         │  │  └───────────┘  └───────────┘  │  │  │
+│   │  │ Three.js   │  │         │  └───────────────────────────────────┘  │  │
+│   │  │ Viewer     │  │         │                   │                     │  │
+│   │  └────────────┘  │         │  ┌───────────────────────────────────┐  │  │
+│   │  ┌────────────┐  │         │  │         File System              │  │  │
+│   │  │ Glassmorph │  │         │  │  ┌──────────┐  ┌──────────┐    │  │  │
+│   │  │ UI Design  │  │         │  │  │ /uploads │  │ /static  │    │  │  │
+│   │  └────────────┘  │         │  │  └──────────┘  └──────────┘    │  │  │
+│   │  ┌────────────┐  │         │  └───────────────────────────────────┘  │  │
+│   │  │ 20+ Tools  │  │         │                                         │  │
+│   │  │  Modals    │  │         │   ┌─────────────────────────────────┐   │  │
+│   │  └────────────┘  │         │   │    External Services            │   │  │
+│   └─────────────────┘         │   │  ┌──────────────────────────┐   │   │  │
+│                               │   │  │    Render (Hosting)       │   │   │  │
+│                               │   │  └──────────────────────────┘   │   │  │
+│                               │   └─────────────────────────────────┘   │  │
+│                                                                         │  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                          DATA FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  User Upload → FastAPI → PLY Conversion → Three.js → 3D Visualization
+                                                           ↓
+  User Request → API → Backend → Processing → Result → Display
+                                                           ↓
+  CAD Drawing → Three.js → Scene Update → Display
+```
+
+### Architecture Components
+
+| Component | Technology | Description |
+|-----------|------------|-------------|
+| **Frontend** | HTML5, CSS3, JavaScript | Glassmorphism UI with 20+ tool modals |
+| **3D Engine** | Three.js + OrbitControls | GPU-accelerated point cloud rendering |
+| **Backend** | FastAPI (Python) | RESTful API with 20+ endpoints |
+| **Desktop App** | Electron | Cross-platform native application |
+| **Processing** | NumPy, SciPy, Matplotlib | Volume calc, profiles, orthophoto |
+| **Hosting** | Render (free tier) | Cloud deployment with auto-deploy |
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Data Processing Pipeline                       │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  Upload ──→ Convert ──→ Store ──→ Visualize ──→ Analyze ──→ Export │
+│    │          │          │           │            │          │      │
+│    ▼          ▼          ▼           ▼            ▼          ▼      │
+│  LAS/LAZ    PLY      /static/   Three.js     Volume/     CSV/TXT   │
+│  /E57       Format   models/    Rendering    Profiles    /LAS      │
+│                                                                    │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -127,6 +218,12 @@
 | **HTML5/CSS3** | Responsive UI with glassmorphism |
 | **Font Awesome** | Icons and visual elements |
 
+### Desktop
+| Technology | Purpose |
+|------------|---------|
+| **Electron** | Cross-platform desktop wrapper |
+| **Electron Builder** | Build installers for macOS/Windows/Linux |
+
 ### DevOps
 | Platform | Purpose |
 |----------|---------|
@@ -141,6 +238,7 @@
 ### Prerequisites
 - Python 3.12+
 - pip package manager
+- Node.js 18+ (for Electron desktop app)
 - Git (optional)
 
 ### Local Installation
@@ -173,6 +271,54 @@ docker build -t pcs-view .
 # Run container
 docker run -p 8000:8000 pcs-view
 ```
+
+---
+
+## 🖥️ Desktop Application
+
+PCS-View is also available as a native desktop application built with Electron.
+
+### Build for macOS
+
+```bash
+cd electron
+npm install
+npm run build:mac
+```
+Creates: `dist/PCS-View-2.0.0.dmg`
+
+### Build for Windows
+
+```bash
+cd electron
+npm install
+npm run build:win
+```
+Creates: `dist/PCS-View Setup 2.0.0.exe`
+
+### Build for Linux
+
+```bash
+cd electron
+npm install
+npm run build:linux
+```
+Creates: `dist/PCS-View-2.0.0.AppImage`
+
+### Build All Platforms
+
+```bash
+cd electron
+npm run build:all
+```
+
+### Desktop Features
+- ✅ No Python or Node.js required
+- ✅ Native menu bar (File, View, Tools, Help)
+- ✅ Keyboard shortcuts (Cmd+I, Cmd+E, etc.)
+- ✅ Automatic server startup
+- ✅ Works offline
+- ✅ File associations for LAS/LAZ/PLY/E57
 
 ---
 
@@ -224,27 +370,38 @@ curl https://pcs-view.onrender.com/api/export/abc123.ply/csv
 PCS-View/
 │
 ├── backend/
-│   ├── __init__.py
-│   ├── routes.py         # API routes and logic
-│   └── __pycache__/      # Compiled Python files
+│   ├── __init__.py          # Package initialization
+│   ├── routes.py            # API routes and logic
+│   ├── classification.py    # Point cloud classification
+│   ├── orthophoto.py        # Orthophoto generation
+│   ├── volumes.py           # Volume calculations
+│   └── requirements.txt     # Backend dependencies
 │
 ├── frontend/
-│   ├── index.html        # Main application
-│   ├── css/              # Stylesheets
-│   ├── js/               # JavaScript modules
-│   └── viewer.html       # Viewer page (legacy)
+│   ├── index.html           # Main application
+│   ├── css/                 # Stylesheets
+│   ├── js/                  # JavaScript modules
+│   └── viewer.html          # Viewer page (legacy)
+│
+├── electron/
+│   ├── main.js              # Electron main process
+│   ├── preload.js           # Secure IPC bridge
+│   ├── package.json         # Electron dependencies
+│   ├── assets/              # Icons and assets
+│   └── dist/                # Built installers
 │
 ├── static/
-│   ├── models/           # Converted PLY files
-│   └── orthophotos/      # Generated orthophotos
+│   ├── models/              # Converted PLY files
+│   └── orthophotos/         # Generated orthophotos
 │
-├── uploads/              # Temporary upload storage
+├── uploads/                 # Temporary upload storage
 │
-├── Dockerfile            # Container configuration
-├── render.yaml           # Render deployment config
-├── run.py                # Launcher script
-├── requirements.txt      # Python dependencies
-└── README.md             # This file
+├── Dockerfile               # Container configuration
+├── render.yaml              # Render deployment config
+├── run.py                   # Launcher script
+├── requirements.txt         # Python dependencies
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
 ```
 
 ---
@@ -344,7 +501,7 @@ python run.py
 ### Technical Skills
 ```
 GIS:     ArcGIS Pro, QGIS, GRASS GIS, ENVI, SNAP, Google Earth Engine
-Dev:     Python, FastAPI, Three.js, JavaScript, Docker, HTML/CSS
+Dev:     Python, FastAPI, Three.js, JavaScript, Docker, HTML/CSS, Electron
 Survey:  GNSS, RTK, Total Stations, Drone Photogrammetry, LiDAR
 ```
 
@@ -374,6 +531,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 - **Politecnico di Milano** - For academic foundation
 - **Open3D** - For point cloud processing capabilities
 - **Three.js** - For 3D visualization excellence
+- **Electron** - For cross-platform desktop support
 
 ---
 
