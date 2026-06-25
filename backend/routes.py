@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Body
-from fastapi.responses import FileResponse, JSONResponse
 import os
 import json
 import numpy as np
+from fastapi import APIRouter, HTTPException, UploadFile, File, Body
+from fastapi.responses import FileResponse, JSONResponse
 from scipy.spatial import ConvexHull
-from scipy.interpolate import griddata
 import tempfile
 import shutil
 
@@ -20,10 +19,13 @@ os.makedirs(ORTHOPHOTO_DIR, exist_ok=True)
 
 # ===== HELPER FUNCTIONS =====
 def load_points(filepath):
-    """Load points from PLY file"""
     points = []
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except UnicodeDecodeError:
+        with open(filepath, 'r', encoding='latin-1') as f:
+            lines = f.readlines()
     
     header_end = 0
     for i, line in enumerate(lines):
@@ -42,8 +44,7 @@ def load_points(filepath):
     return np.array(points) if points else np.array([])
 
 def write_ply(filepath, points, colors=None):
-    """Write points to PLY file"""
-    with open(filepath, 'w') as f:
+    with open(filepath, 'w', encoding='utf-8') as f:
         f.write("ply\n")
         f.write("format ascii 1.0\n")
         f.write(f"element vertex {len(points)}\n")
@@ -63,29 +64,14 @@ def write_ply(filepath, points, colors=None):
                 f.write(f"{p[0]} {p[1]} {p[2]}\n")
 
 def sample_points(points, max_points=50000):
-    """Sample points to max_points"""
     if len(points) <= max_points:
         return points
     indices = np.random.choice(len(points), max_points, replace=False)
     return points[indices]
 
-def read_las(filepath):
-    """Read LAS file using laspy if available"""
-    try:
-        import laspy
-        las = laspy.read(filepath)
-        points = np.vstack([las.x, las.y, las.z]).T
-        colors = None
-        if hasattr(las, 'red') and las.red is not None:
-            colors = np.vstack([las.red/65535, las.green/65535, las.blue/65535]).T
-        return points, colors
-    except ImportError:
-        return None, None
-
-# ===== PROJECTS =====
+# ===== API ENDPOINTS =====
 @router.get("/api/projects")
 async def get_projects():
-    """Get list of available projects/models"""
     models = []
     if os.path.exists(MODEL_DIR):
         for f in os.listdir(MODEL_DIR):
@@ -99,10 +85,8 @@ async def get_projects():
                 })
     return {"projects": models}
 
-# ===== UPLOAD =====
 @router.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
-    """Upload and convert point cloud file"""
     try:
         filename = file.filename
         ext = filename.split('.')[-1].lower()
@@ -110,7 +94,6 @@ async def upload_file(file: UploadFile = File(...)):
         temp_path = os.path.join(UPLOAD_DIR, f"temp_{unique_name}")
         output_path = os.path.join(MODEL_DIR, unique_name)
         
-        # Save uploaded file
         with open(temp_path, "wb") as f:
             content = await file.read()
             f.write(content)
@@ -118,7 +101,6 @@ async def upload_file(file: UploadFile = File(...)):
         points = None
         colors = None
         
-        # Handle different formats
         if ext in ['las', 'laz']:
             try:
                 import laspy
@@ -126,8 +108,7 @@ async def upload_file(file: UploadFile = File(...)):
                 points = np.vstack([las.x, las.y, las.z]).T
                 if hasattr(las, 'red') and las.red is not None:
                     colors = np.vstack([las.red/65535, las.green/65535, las.blue/65535]).T
-            except ImportError:
-                # Fallback: try to read as text
+            except:
                 data = np.loadtxt(temp_path)
                 points = data[:, :3]
                 colors = data[:, 3:6] if data.shape[1] >= 6 else None
@@ -147,12 +128,10 @@ async def upload_file(file: UploadFile = File(...)):
                 content={"success": False, "detail": "Could not parse file"}
             )
         
-        # Sample points
         points = sample_points(points, 50000)
         if colors is not None and len(colors) > len(points):
             colors = colors[:len(points)]
         
-        # Write as PLY
         write_ply(output_path, points, colors)
         os.remove(temp_path)
         
@@ -168,10 +147,8 @@ async def upload_file(file: UploadFile = File(...)):
             content={"success": False, "detail": str(e)}
         )
 
-# ===== POINT CLOUD =====
 @router.get("/api/pointcloud/{model_name}")
 async def get_pointcloud(model_name: str):
-    """Get point cloud data for visualization"""
     filepath = os.path.join(MODEL_DIR, model_name)
     if not os.path.exists(filepath):
         raise HTTPException(404, "Model not found")
@@ -179,8 +156,12 @@ async def get_pointcloud(model_name: str):
     points = []
     colors = []
     
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except UnicodeDecodeError:
+        with open(filepath, 'r', encoding='latin-1') as f:
+            lines = f.readlines()
     
     header_end = 0
     has_colors = False
@@ -201,10 +182,8 @@ async def get_pointcloud(model_name: str):
             except:
                 pass
     
-    # Limit points for performance
-    max_points = 50000
-    if len(points) > max_points:
-        indices = np.random.choice(len(points), max_points, replace=False)
+    if len(points) > 50000:
+        indices = np.random.choice(len(points), 50000, replace=False)
         points = [points[i] for i in indices]
         if colors:
             colors = [colors[i] for i in indices]
@@ -216,10 +195,8 @@ async def get_pointcloud(model_name: str):
         "total_points": len(points)
     }
 
-# ===== INFO =====
 @router.get("/api/info/{model_name}")
 async def get_info(model_name: str):
-    """Get point cloud information"""
     filepath = os.path.join(MODEL_DIR, model_name)
     if not os.path.exists(filepath):
         raise HTTPException(404, "Model not found")
@@ -228,10 +205,13 @@ async def get_info(model_name: str):
     points = load_points(filepath)
     
     has_colors = False
-    with open(filepath, 'r') as f:
-        content = f.read()
-        if 'property uchar red' in content:
-            has_colors = True
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            if 'property uchar red' in content:
+                has_colors = True
+    except:
+        pass
     
     return {
         "point_count": len(points),
@@ -241,10 +221,8 @@ async def get_info(model_name: str):
         "has_classification": False
     }
 
-# ===== VOLUME =====
 @router.post("/api/volume/{model_name}")
 async def calculate_volume(model_name: str):
-    """Calculate volume using convex hull"""
     filepath = os.path.join(MODEL_DIR, model_name)
     if not os.path.exists(filepath):
         raise HTTPException(404, "Model not found")
@@ -265,7 +243,6 @@ async def calculate_volume(model_name: str):
 
 @router.post("/api/volume/advanced/{model_name}")
 async def advanced_volume(model_name: str):
-    """Advanced volume calculation"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -284,10 +261,8 @@ async def advanced_volume(model_name: str):
     except Exception as e:
         return {"success": False, "detail": str(e)}
 
-# ===== CUT & FILL =====
 @router.post("/api/cutfill/{model_name}")
 async def cutfill(model_name: str):
-    """Calculate cut and fill volumes"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -304,10 +279,8 @@ async def cutfill(model_name: str):
         "net_volume": round(cut - fill, 2)
     }
 
-# ===== CLASSIFY =====
 @router.post("/api/classify/height/{model_name}")
 async def classify_height(model_name: str):
-    """Classify points by height"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -326,10 +299,8 @@ async def classify_height(model_name: str):
         "buildings": int(np.sum(z_vals >= building - 0.5))
     }
 
-# ===== ORTHOPHOTO =====
 @router.post("/api/orthophoto/generate/{model_name}")
 async def generate_orthophoto(model_name: str, resolution: float = 0.1):
-    """Generate orthophoto from point cloud"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -338,7 +309,6 @@ async def generate_orthophoto(model_name: str, resolution: float = 0.1):
     ortho_name = f"{model_name.replace('.ply', '')}_ortho.png"
     ortho_path = os.path.join(ORTHOPHOTO_DIR, ortho_name)
     
-    # Create a simple placeholder
     try:
         import matplotlib.pyplot as plt
         from matplotlib import cm
@@ -361,8 +331,7 @@ async def generate_orthophoto(model_name: str, resolution: float = 0.1):
             "orthophoto_url": f"/static/orthophotos/{ortho_name}",
             "resolution": resolution
         }
-    except ImportError:
-        # Fallback: create a text file
+    except:
         with open(ortho_path.replace('.png', '.txt'), 'w') as f:
             f.write(f"Orthophoto for {model_name}\n")
             f.write(f"Points: {len(points)}\n")
@@ -374,10 +343,8 @@ async def generate_orthophoto(model_name: str, resolution: float = 0.1):
             "resolution": resolution
         }
 
-# ===== PROFILES =====
 @router.post("/api/profile/longitudinal/{model_name}")
 async def longitudinal_profile(model_name: str):
-    """Generate longitudinal profile"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -397,7 +364,6 @@ async def longitudinal_profile(model_name: str):
 
 @router.post("/api/profile/cross/{model_name}")
 async def cross_profile(model_name: str, center_x: float = 0, center_y: float = 0, width: float = 20):
-    """Generate cross section profile"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -414,10 +380,8 @@ async def cross_profile(model_name: str, center_x: float = 0, center_y: float = 
         "max_elevation": round(np.max(filtered[:, 2]) if len(filtered) > 0 else 0, 2)
     }
 
-# ===== EARTHWORKS =====
 @router.post("/api/earthworks/esplanade/{model_name}")
 async def esplanade(model_name: str, data: dict = Body(...)):
-    """Calculate esplanade earthworks"""
     filepath = os.path.join(MODEL_DIR, model_name)
     points = load_points(filepath)
     if len(points) < 4:
@@ -443,16 +407,13 @@ async def esplanade(model_name: str, data: dict = Body(...)):
         "area_sqm": round(area, 2)
     }
 
-# ===== ROAD =====
 @router.post("/api/road/superelevation")
 async def superelevation(data: dict = Body(...)):
-    """Calculate superelevation"""
     speed = data.get('speed', 80)
     radius = data.get('radius', 100)
     
-    # AASHTO formula: e = V^2 / (127 * R)
     e = (speed * speed) / (127 * radius)
-    e = min(e, 0.12)  # Max 12%
+    e = min(e, 0.12)
     
     return {
         "success": True,
@@ -461,10 +422,8 @@ async def superelevation(data: dict = Body(...)):
         "superelevation": round(e * 100, 2)
     }
 
-# ===== ALIGNMENT =====
 @router.post("/api/alignment/create")
 async def create_alignment(data: dict = Body(...)):
-    """Create road alignment"""
     points = data.get('points', [])
     name = data.get('name', 'alignment1')
     
@@ -474,10 +433,55 @@ async def create_alignment(data: dict = Body(...)):
         "segments": len(points) - 1 if len(points) > 1 else 0
     }
 
-# ===== EXPORT =====
+@router.post("/api/contours/generate/{model_name}")
+async def generate_contours_api(model_name: str, data: dict = Body(...)):
+    """Generate contour lines from point cloud"""
+    filepath = os.path.join(MODEL_DIR, model_name)
+    if not os.path.exists(filepath):
+        raise HTTPException(404, "Model not found")
+    
+    points = load_points(filepath)
+    if len(points) < 4:
+        return {"success": False, "detail": "Not enough points"}
+    
+    interval = data.get('interval', 1.0)
+    grid_size = data.get('grid_size', 100)
+    smooth = data.get('smooth', 1.0)
+    
+    try:
+        from contours import generate_contours
+        
+        # Generate contours
+        contours = generate_contours(points, interval, grid_size, smooth)
+        
+        if not contours:
+            return {"success": False, "detail": "Could not generate contours"}
+        
+        # Convert to frontend-friendly format
+        contour_data = []
+        for contour in contours:
+            points_list = []
+            for p in contour['points']:
+                points_list.append([p['x'], p['y'], p['z']])
+            contour_data.append({
+                'elevation': contour['elevation'],
+                'points': points_list,
+                'is_major': contour.get('is_major', False)
+            })
+        
+        return {
+            "success": True,
+            "contours": contour_data,
+            "count": len(contour_data),
+            "interval": interval
+        }
+    except ImportError as e:
+        return {"success": False, "detail": f"Import error: {str(e)}"}
+    except Exception as e:
+        return {"success": False, "detail": str(e)}
+
 @router.get("/api/export/{model_name}/{format}")
 async def export_pointcloud(model_name: str, format: str):
-    """Export point cloud in various formats"""
     filepath = os.path.join(MODEL_DIR, model_name)
     if not os.path.exists(filepath):
         raise HTTPException(404, "Model not found")
@@ -489,8 +493,12 @@ async def export_pointcloud(model_name: str, format: str):
     
     if format == 'csv':
         np.savetxt(temp_path, points, delimiter=',', header='x,y,z', comments='')
-    elif format == 'txt':
-        np.savetxt(temp_path, points, delimiter=' ')
+    elif format == 'pdf':
+        with open(temp_path, 'w') as f:
+            f.write("PCS-View 3D PDF Export\n")
+            f.write(f"Model: {model_name}\n")
+            f.write(f"Points: {len(points)}\n")
+            f.write("This is a 3D PDF placeholder\n")
     else:
         np.savetxt(temp_path, points, delimiter=' ')
     
