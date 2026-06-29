@@ -527,7 +527,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 🙏 Acknowledgments
 
-- **Stonex** - For inspiration and format compatibility
 - **Politecnico di Milano** - For academic foundation
 - **Open3D** - For point cloud processing capabilities
 - **Three.js** - For 3D visualization excellence
