@@ -7,7 +7,7 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Supported Stonex formats
+# Supported multi formats
 SUPPORTED_FORMATS = {".las", ".laz", ".ply", ".e57", ".xyz", ".txt", ".cx3d"}
 
 
