@@ -6,7 +6,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 class PointCloudClassifier:
-    """Point cloud classification engine similar to Cube-3d"""
     
     @staticmethod
     def classify_by_height(pcd_file: Path, height_thresholds: list = None) -> dict:
