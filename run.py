@@ -1,8 +1,4 @@
-#!/usr/bin/env python3
-"""
-PCS-View - Professional Point Cloud Platform
-A complete platform for point cloud visualization and analysis
-"""
+
 
 import os
 import sys
