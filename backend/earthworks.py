@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class Earthworks:
-    """Earthworks calculations - similar to Aplitop's earthworks tools"""
 
     @staticmethod
     def calculate_volume_by_surfaces(current_points: np.ndarray, design_points: np.ndarray) -> dict:
