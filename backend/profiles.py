@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 
 class ProfileGenerator:
-    """Profile generation - similar to Aplitop's profile tools"""
 
     @staticmethod
     def generate_longitudinal_profile(points: np.ndarray, interval: float = 1.0) -> dict:
